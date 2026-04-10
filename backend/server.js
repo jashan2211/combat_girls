@@ -89,6 +89,17 @@ app.get('/api/health', (_req, res) => {
 // ---------------------------------------------------------------------------
 // Serve Next.js static export (production)
 // ---------------------------------------------------------------------------
+// Debug: list directory structure
+console.log('__dirname:', __dirname);
+try {
+  console.log('Files in __dirname:', fs.readdirSync(__dirname).join(', '));
+  const parentDir = path.join(__dirname, '..');
+  console.log('Files in parent:', fs.readdirSync(parentDir).join(', '));
+  if (fs.existsSync(path.join(__dirname, 'public'))) {
+    console.log('Files in backend/public:', fs.readdirSync(path.join(__dirname, 'public')).slice(0, 10).join(', '));
+  }
+} catch (e) { console.log('Dir listing error:', e.message); }
+
 // Check multiple possible frontend build locations
 const possiblePaths = [
   path.join(__dirname, 'public'),                    // backend/public (copied build)
