@@ -8,11 +8,16 @@ import {
   CheckCircle,
   Search,
   Youtube,
+  Instagram,
+  Facebook,
   Swords,
+  Music2,
+  ImageOff,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Avatar from '@/components/ui/Avatar';
 
+type Platform = 'youtube' | 'instagram' | 'tiktok' | 'facebook' | null;
 type VideoFormat = 'horizontal' | 'vertical' | 'shorts';
 type Visibility = 'public' | 'premium' | 'ppv';
 type Step = 'url' | 'details' | 'success';
@@ -53,18 +58,59 @@ const categories = [
 
 const sports = ['MMA', 'Boxing', 'Muay Thai', 'BJJ', 'Wrestling', 'Kickboxing', 'Judo'];
 
-function parseYouTubeUrl(url: string): { videoId: string; isShort: boolean } | null {
+function parseVideoUrl(url: string): { platform: Platform; videoId: string; isShort: boolean } | null {
   const trimmed = url.trim();
-  // youtube.com/shorts/{id}
-  const shortsMatch = trimmed.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/);
-  if (shortsMatch) return { videoId: shortsMatch[1], isShort: true };
-  // youtube.com/watch?v={id}
-  const watchMatch = trimmed.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
-  if (watchMatch) return { videoId: watchMatch[1], isShort: false };
-  // youtu.be/{id}
-  const shortUrlMatch = trimmed.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
-  if (shortUrlMatch) return { videoId: shortUrlMatch[1], isShort: false };
+
+  // YouTube: youtube.com/shorts/{id}
+  const ytShortsMatch = trimmed.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/);
+  if (ytShortsMatch) return { platform: 'youtube', videoId: ytShortsMatch[1], isShort: true };
+
+  // YouTube: youtube.com/watch?v={id}
+  const ytWatchMatch = trimmed.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+  if (ytWatchMatch) return { platform: 'youtube', videoId: ytWatchMatch[1], isShort: false };
+
+  // YouTube: youtu.be/{id}
+  const ytShortUrlMatch = trimmed.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+  if (ytShortUrlMatch) return { platform: 'youtube', videoId: ytShortUrlMatch[1], isShort: false };
+
+  // Instagram: instagram.com/reel/ or instagram.com/p/
+  const igMatch = trimmed.match(/instagram\.com\/(reel|p)\/([a-zA-Z0-9_-]+)/);
+  if (igMatch) return { platform: 'instagram', videoId: igMatch[2], isShort: igMatch[1] === 'reel' };
+
+  // TikTok: tiktok.com/@user/video/{id}
+  const ttMatch = trimmed.match(/tiktok\.com\/@[^/]+\/video\/(\d+)/);
+  if (ttMatch) return { platform: 'tiktok', videoId: ttMatch[1], isShort: true };
+
+  // Facebook: facebook.com/watch/ or fb.watch/
+  const fbWatchMatch = trimmed.match(/facebook\.com\/watch\/?\??[^\s]*/);
+  if (fbWatchMatch) return { platform: 'facebook', videoId: 'fb-video', isShort: false };
+
+  const fbShortMatch = trimmed.match(/fb\.watch\/([a-zA-Z0-9_-]+)/);
+  if (fbShortMatch) return { platform: 'facebook', videoId: fbShortMatch[1], isShort: false };
+
   return null;
+}
+
+const platformConfig: Record<string, { label: string; color: string; bg: string; border: string }> = {
+  youtube: { label: 'YouTube', color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/30' },
+  instagram: { label: 'Instagram', color: 'text-purple-400', bg: 'bg-gradient-to-br from-purple-500/10 to-pink-500/10', border: 'border-purple-500/30' },
+  tiktok: { label: 'TikTok', color: 'text-white', bg: 'bg-dark-900', border: 'border-dark-400' },
+  facebook: { label: 'Facebook', color: 'text-blue-500', bg: 'bg-blue-500/10', border: 'border-blue-500/30' },
+};
+
+function PlatformIcon({ platform, className }: { platform: string; className?: string }) {
+  switch (platform) {
+    case 'youtube':
+      return <Youtube className={cn('text-red-500', className)} />;
+    case 'instagram':
+      return <Instagram className={cn('text-purple-400', className)} />;
+    case 'tiktok':
+      return <Music2 className={cn('text-white', className)} />;
+    case 'facebook':
+      return <Facebook className={cn('text-blue-500', className)} />;
+    default:
+      return <Link2 className={cn('text-dark-400', className)} />;
+  }
 }
 
 function FighterSearch({
@@ -165,6 +211,7 @@ export default function UploadPage() {
   const [step, setStep] = useState<Step>('url');
   const [url, setUrl] = useState('');
   const [videoId, setVideoId] = useState('');
+  const [platform, setPlatform] = useState<Platform>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
@@ -177,9 +224,10 @@ export default function UploadPage() {
 
   const handleUrlChange = (value: string) => {
     setUrl(value);
-    const parsed = parseYouTubeUrl(value);
+    const parsed = parseVideoUrl(value);
     if (parsed) {
       setVideoId(parsed.videoId);
+      setPlatform(parsed.platform);
       if (parsed.isShort) {
         setFormat('shorts');
         setCategory('shorts');
@@ -197,6 +245,7 @@ export default function UploadPage() {
     setStep('url');
     setUrl('');
     setVideoId('');
+    setPlatform(null);
     setTitle('');
     setDescription('');
     setCategory('');
@@ -234,13 +283,13 @@ export default function UploadPage() {
       <div className="max-w-2xl mx-auto px-4 py-12">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-brand-red/10 mb-4">
-            <Youtube className="h-7 w-7 text-brand-red" />
+            <Link2 className="h-7 w-7 text-brand-red" />
           </div>
           <h1 className="text-2xl font-display font-bold text-white mb-2">
             Post a Video
           </h1>
           <p className="text-dark-200 text-sm">
-            Paste a YouTube link to get started
+            Paste a video link from your favorite platform
           </p>
         </div>
 
@@ -252,39 +301,49 @@ export default function UploadPage() {
             onChange={(e) => handleUrlChange(e.target.value)}
             onPaste={(e) => {
               const pasted = e.clipboardData.getData('text');
-              // Let onChange handle it via the synthetic event after paste updates value
               setTimeout(() => handleUrlChange(pasted), 0);
             }}
-            placeholder="Paste YouTube URL here..."
+            placeholder="Paste YouTube, Instagram, TikTok, or Facebook URL..."
             className="w-full h-14 pl-12 pr-4 bg-dark-800 border-2 border-dark-600 rounded-2xl text-white placeholder-dark-400 text-base focus:border-brand-red focus:outline-none transition-colors"
           />
         </div>
 
         <p className="text-xs text-dark-400 mt-3 text-center">
-          Supports youtube.com/watch, youtu.be, and youtube.com/shorts links
+          Supports youtube.com, youtu.be, instagram.com/reel, tiktok.com, facebook.com/watch
         </p>
 
-        <div className="mt-10 grid grid-cols-3 gap-3 text-center">
-          <div className="card p-4 border border-dark-600">
-            <div className="h-8 w-8 rounded-lg bg-brand-red/10 flex items-center justify-center mx-auto mb-2">
-              <Youtube className="h-4 w-4 text-brand-red" />
+        <div className="mt-10 grid grid-cols-4 gap-3 text-center">
+          {/* YouTube */}
+          <div className="card p-4 border border-red-500/20">
+            <div className="h-8 w-8 rounded-lg bg-red-500/10 flex items-center justify-center mx-auto mb-2">
+              <Youtube className="h-4 w-4 text-red-500" />
             </div>
-            <p className="text-xs font-medium text-white">Horizontal</p>
-            <p className="text-[10px] text-dark-400">16:9 ratio</p>
+            <p className="text-xs font-medium text-white">YouTube</p>
+            <p className="text-[10px] text-dark-400">Videos & Shorts</p>
           </div>
-          <div className="card p-4 border border-dark-600">
-            <div className="h-8 w-8 rounded-lg bg-brand-gold/10 flex items-center justify-center mx-auto mb-2">
-              <Youtube className="h-4 w-4 text-brand-gold rotate-90" />
+          {/* Instagram */}
+          <div className="card p-4 border border-purple-500/20">
+            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-500/10 to-pink-500/10 flex items-center justify-center mx-auto mb-2">
+              <Instagram className="h-4 w-4 text-purple-400" />
             </div>
-            <p className="text-xs font-medium text-white">Vertical</p>
-            <p className="text-[10px] text-dark-400">9:16 ratio</p>
+            <p className="text-xs font-medium text-white">Instagram</p>
+            <p className="text-[10px] text-dark-400">Reels & Posts</p>
           </div>
-          <div className="card p-4 border border-dark-600">
-            <div className="h-8 w-8 rounded-lg bg-brand-red/10 flex items-center justify-center mx-auto mb-2">
-              <Youtube className="h-4 w-4 text-brand-red-light rotate-90" />
+          {/* TikTok */}
+          <div className="card p-4 border border-dark-400/30 bg-dark-900">
+            <div className="h-8 w-8 rounded-lg bg-dark-700 flex items-center justify-center mx-auto mb-2">
+              <Music2 className="h-4 w-4 text-white" />
             </div>
-            <p className="text-xs font-medium text-white">Shorts</p>
-            <p className="text-[10px] text-dark-400">Under 60s</p>
+            <p className="text-xs font-medium text-white">TikTok</p>
+            <p className="text-[10px] text-dark-400">Videos</p>
+          </div>
+          {/* Facebook */}
+          <div className="card p-4 border border-blue-500/20">
+            <div className="h-8 w-8 rounded-lg bg-blue-500/10 flex items-center justify-center mx-auto mb-2">
+              <Facebook className="h-4 w-4 text-blue-500" />
+            </div>
+            <p className="text-xs font-medium text-white">Facebook</p>
+            <p className="text-[10px] text-dark-400">Watch & Videos</p>
           </div>
         </div>
       </div>
@@ -292,12 +351,24 @@ export default function UploadPage() {
   }
 
   /* ------ Step 2: Details Form ------ */
-  const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+  const isYouTube = platform === 'youtube';
+  const thumbnailUrl = isYouTube ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : null;
+  const pConfig = platform ? platformConfig[platform] : null;
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-display font-bold text-white">Video Details</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-display font-bold text-white">Video Details</h1>
+          {platform && pConfig && (
+            <span className={cn('text-xs font-medium px-2.5 py-1 rounded-full border', pConfig.border, pConfig.color, pConfig.bg)}>
+              <span className="flex items-center gap-1">
+                <PlatformIcon platform={platform} className="h-3 w-3" />
+                {pConfig.label}
+              </span>
+            </span>
+          )}
+        </div>
         <button
           onClick={handleReset}
           className="p-2 rounded-full hover:bg-dark-700 transition-colors"
@@ -311,12 +382,22 @@ export default function UploadPage() {
         <div className="flex flex-col md:flex-row gap-5">
           <div className="md:w-80 shrink-0">
             <div className="relative aspect-video rounded-xl overflow-hidden bg-dark-700">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={thumbnailUrl}
-                alt="Video thumbnail"
-                className="w-full h-full object-cover"
-              />
+              {isYouTube && thumbnailUrl ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={thumbnailUrl}
+                  alt="Video thumbnail"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center gap-2 p-4">
+                  {platform && <PlatformIcon platform={platform} className="h-8 w-8" />}
+                  <ImageOff className="h-5 w-5 text-dark-400" />
+                  <p className="text-xs text-dark-300 text-center leading-relaxed">
+                    Preview not available — embed will work after posting
+                  </p>
+                </div>
+              )}
             </div>
             <p className="text-[10px] text-dark-400 mt-1.5 truncate">{url}</p>
           </div>

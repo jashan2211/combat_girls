@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -18,6 +18,9 @@ import {
   Target,
   Users,
   Flame,
+  MoreHorizontal,
+  ShieldCheck,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Avatar from '@/components/ui/Avatar';
@@ -28,7 +31,16 @@ const bottomNavItems = [
   { href: '/shorts', icon: Play, label: 'Shorts' },
   { href: '/upload', icon: PlusCircle, label: 'Upload', isUpload: true },
   { href: '/events', icon: Calendar, label: 'Events' },
+  { href: '#more', icon: MoreHorizontal, label: 'More', isMore: true },
+];
+
+const moreMenuItems = [
+  { href: '/explore', icon: Compass, label: 'Explore' },
+  { href: '/rankings', icon: Trophy, label: 'Rankings' },
+  { href: '/predict', icon: Target, label: 'Predict' },
+  { href: '/community', icon: Users, label: 'Community' },
   { href: '/profile/me', icon: User, label: 'Profile' },
+  { href: '/admin', icon: ShieldCheck, label: 'Admin' },
 ];
 
 const sidebarNavItems = [
@@ -51,6 +63,7 @@ export default function MainLayout({
   const pathname = usePathname();
   const { user } = useAuthStore();
   const { unreadCount } = useNotificationStore();
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
 
   const isActive = (href: string) => {
     if (href === '/') return pathname === '/';
@@ -132,11 +145,16 @@ export default function MainLayout({
 
         <div className="p-3 border-t border-dark-600">
           <Link
-            href="/settings"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-dark-100 hover:bg-dark-700 hover:text-white transition-colors"
+            href="/admin"
+            className={cn(
+              'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors',
+              isActive('/admin')
+                ? 'bg-brand-red/10 text-brand-red'
+                : 'text-dark-100 hover:bg-dark-700 hover:text-white'
+            )}
           >
-            <Settings className="h-5 w-5" />
-            Settings
+            <ShieldCheck className={cn('h-5 w-5', isActive('/admin') && 'text-brand-red')} />
+            Admin
           </Link>
         </div>
       </aside>
@@ -149,6 +167,50 @@ export default function MainLayout({
       >
         {children}
       </main>
+
+      {/* More Menu Slide-up Sheet */}
+      {moreMenuOpen && (
+        <div className="lg:hidden fixed inset-0 z-[60]">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/60"
+            onClick={() => setMoreMenuOpen(false)}
+          />
+          {/* Sheet */}
+          <div className="absolute bottom-16 left-0 right-0 bg-dark-800 border-t border-dark-600 rounded-t-2xl animate-in slide-in-from-bottom duration-200">
+            <div className="flex items-center justify-between px-5 pt-4 pb-2">
+              <h3 className="text-sm font-semibold text-dark-100">More</h3>
+              <button
+                onClick={() => setMoreMenuOpen(false)}
+                className="p-1.5 rounded-full hover:bg-dark-700 transition-colors"
+              >
+                <X className="h-4 w-4 text-dark-300" />
+              </button>
+            </div>
+            <nav className="px-3 pb-4 grid grid-cols-3 gap-1">
+              {moreMenuItems.map((item) => {
+                const active = isActive(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMoreMenuOpen(false)}
+                    className={cn(
+                      'flex flex-col items-center justify-center gap-1.5 py-4 rounded-xl min-h-[72px] transition-colors',
+                      active
+                        ? 'bg-brand-red/10 text-brand-red'
+                        : 'text-dark-200 hover:bg-dark-700 hover:text-white'
+                    )}
+                  >
+                    <item.icon className="h-5 w-5" />
+                    <span className="text-xs font-medium">{item.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+        </div>
+      )}
 
       {/* Bottom Mobile Navigation */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 glass border-t border-dark-600">
@@ -170,12 +232,28 @@ export default function MainLayout({
               );
             }
 
+            if (item.isMore) {
+              return (
+                <button
+                  key="more-btn"
+                  onClick={() => setMoreMenuOpen((v) => !v)}
+                  className={cn(
+                    'flex flex-col items-center justify-center gap-0.5 min-w-[48px] min-h-[44px] py-1 transition-colors',
+                    moreMenuOpen ? 'text-brand-red' : 'text-dark-200'
+                  )}
+                >
+                  <MoreHorizontal className="h-5 w-5" />
+                  <span className="text-[10px] font-medium">More</span>
+                </button>
+              );
+            }
+
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'flex flex-col items-center justify-center gap-0.5 min-w-[48px] py-1 transition-colors',
+                  'flex flex-col items-center justify-center gap-0.5 min-w-[48px] min-h-[44px] py-1 transition-colors',
                   active ? 'text-brand-red' : 'text-dark-200'
                 )}
               >

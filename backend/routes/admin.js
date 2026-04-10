@@ -483,4 +483,236 @@ router.post('/videos/quick-post', async (req, res, next) => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// POST /api/admin/import/csv - Import fighters from local CSV files
+// Skips duplicates based on slug
+// ---------------------------------------------------------------------------
+router.post('/import/csv', async (req, res, next) => {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+
+    const MMA_DIR = req.body.mmaDir || 'C:/Users/jasha/OneDrive/Documents/mma';
+    const SCRAPE_DIR = path.join(MMA_DIR, 'scrape');
+    const PHOTOS_SRC = path.join(MMA_DIR, 'uploads', 'fighters');
+    const PHOTOS_DEST = path.join(__dirname, '..', '..', 'frontend', 'public', 'fighters');
+
+    // Simple CSV parser
+    function parseCSV(filePath) {
+      if (!fs.existsSync(filePath)) return [];
+      const content = fs.readFileSync(filePath, 'utf-8');
+      const lines = content.split('\n').filter(l => l.trim());
+      const headers = lines[0].split(',').map(h => h.trim());
+      return lines.slice(1).map(line => {
+        const values = [];
+        let current = '';
+        let inQuotes = false;
+        for (const char of line) {
+          if (char === '"') inQuotes = !inQuotes;
+          else if (char === ',' && !inQuotes) { values.push(current.trim()); current = ''; }
+          else current += char;
+        }
+        values.push(current.trim());
+        const obj = {};
+        headers.forEach((h, i) => { obj[h] = values[i] || ''; });
+        return obj;
+      });
+    }
+
+    function slugify(name) {
+      return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    }
+
+    // Parse fight results for female fighters
+    const fightResults = parseCSV(path.join(SCRAPE_DIR, 'ufc_fight_results.csv'));
+    const femaleFighterNames = new Set();
+    const fightRecords = {};
+
+    for (const fight of fightResults) {
+      if (!fight.WEIGHTCLASS || !fight.WEIGHTCLASS.includes("Women's")) continue;
+      const parts = (fight.BOUT || '').split(' vs. ');
+      if (parts.length !== 2) continue;
+      const [name1, name2] = parts.map(n => n.trim());
+      femaleFighterNames.add(name1);
+      femaleFighterNames.add(name2);
+      const [o1, o2] = (fight.OUTCOME || '').split('/');
+      const method = fight.METHOD || '';
+      for (const [name, result] of [[name1, o1], [name2, o2]]) {
+        if (!fightRecords[name]) fightRecords[name] = { wins: 0, losses: 0, draws: 0, knockouts: 0, submissions: 0 };
+        const r = fightRecords[name];
+        if (result === 'W') { r.wins++; if (method.includes('KO/TKO')) r.knockouts++; if (method.includes('Submission')) r.submissions++; }
+        else if (result === 'L') r.losses++;
+        else if (result === 'D') r.draws++;
+      }
+    }
+
+    // Parse fighter details and stats
+    const fighterDetails = parseCSV(path.join(SCRAPE_DIR, 'ufc_fighter_details.csv'));
+    const detailsMap = {};
+    for (const f of fighterDetails) detailsMap[`${f.FIRST} ${f.LAST}`.trim()] = f;
+
+    const fighterTott = parseCSV(path.join(SCRAPE_DIR, 'ufc_fighter_tott.csv'));
+    const tottMap = {};
+    for (const f of fighterTott) tottMap[f.FIGHTER] = f;
+
+    if (!fs.existsSync(PHOTOS_DEST)) fs.mkdirSync(PHOTOS_DEST, { recursive: true });
+
+    let imported = 0, skipped = 0, photoCopied = 0;
+
+    for (const name of femaleFighterNames) {
+      const slug = slugify(name);
+      const existing = await User.findOne({ $or: [{ slug }, { name }] });
+      if (existing) { skipped++; continue; }
+
+      const details = detailsMap[name] || {};
+      const tott = tottMap[name] || {};
+      const record = fightRecords[name] || { wins: 0, losses: 0, draws: 0, knockouts: 0, submissions: 0 };
+
+      // Copy photo if exists
+      let imageUrl = '';
+      const photoSrc = path.join(PHOTOS_SRC, `${slug}.png`);
+      if (fs.existsSync(photoSrc)) {
+        const photoDest = path.join(PHOTOS_DEST, `${slug}.png`);
+        if (!fs.existsSync(photoDest)) {
+          fs.copyFileSync(photoSrc, photoDest);
+          photoCopied++;
+        }
+        imageUrl = `/fighters/${slug}.png`;
+      }
+
+      await User.create({
+        name, email: `${slug}@unclaimed.combatgirls.tv`, role: 'athlete',
+        profileStatus: 'unclaimed', verified: false, slug,
+        bio: details.NICKNAME ? `"${details.NICKNAME}" - UFC Fighter` : 'UFC Fighter',
+        nickname: details.NICKNAME || '', image: imageUrl,
+        fightRecord: record, weightClass: tott.WEIGHT || '',
+        height: tott.HEIGHT || '', reach: tott.REACH || '',
+        stance: tott.STANCE || '', dateOfBirth: tott.DOB || '',
+        ufcStatsUrl: details.URL || tott.URL || '',
+        discipline: ['mma'],
+      });
+      imported++;
+    }
+
+    res.json({
+      success: true,
+      data: {
+        totalFemale: femaleFighterNames.size,
+        imported, skipped, photoCopied,
+        message: `Imported ${imported} new fighters, skipped ${skipped} duplicates, copied ${photoCopied} photos`,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// POST /api/admin/import/mma-social - Import fighter data from mma.social
+// ---------------------------------------------------------------------------
+router.post('/import/mma-social', async (req, res, next) => {
+  try {
+    const { fighterSlug } = req.body;
+
+    if (!fighterSlug) {
+      return res.status(400).json({ success: false, message: 'Fighter slug is required' });
+    }
+
+    const url = `https://mma.social/fighters/${fighterSlug}/`;
+
+    // Fetch the profile page
+    let html;
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      html = await response.text();
+    } catch (fetchErr) {
+      return res.status(400).json({ success: false, message: `Could not fetch mma.social profile: ${fetchErr.message}` });
+    }
+
+    // Parse basic data from HTML (simple regex extraction)
+    const nameMatch = html.match(/<h1[^>]*>([^<]+)<\/h1>/);
+    const recordMatch = html.match(/(\d+)-(\d+)-(\d+)/);
+    const weightMatch = html.match(/Women's\s+([\w]+)/i);
+    const imageMatch = html.match(/src="(\/uploads\/fighters\/[^"]+)"/);
+
+    const name = nameMatch ? nameMatch[1].trim() : fighterSlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    const slug = fighterSlug;
+
+    // Check for duplicate
+    const existing = await User.findOne({ $or: [{ slug }, { mmaSocialUrl: url }] });
+    if (existing) {
+      // Update existing profile with mma.social data
+      existing.mmaSocialUrl = url;
+      if (recordMatch && !existing.fightRecord.wins) {
+        existing.fightRecord = {
+          wins: parseInt(recordMatch[1]) || 0,
+          losses: parseInt(recordMatch[2]) || 0,
+          draws: parseInt(recordMatch[3]) || 0,
+          knockouts: 0, submissions: 0,
+        };
+      }
+      await existing.save();
+      return res.json({ success: true, data: existing, message: 'Updated existing profile with mma.social data' });
+    }
+
+    // Create new profile
+    const fighter = await User.create({
+      name, email: `${slug}@unclaimed.combatgirls.tv`, role: 'athlete',
+      profileStatus: 'unclaimed', verified: false, slug,
+      bio: 'MMA Fighter', mmaSocialUrl: url,
+      fightRecord: recordMatch ? {
+        wins: parseInt(recordMatch[1]) || 0,
+        losses: parseInt(recordMatch[2]) || 0,
+        draws: parseInt(recordMatch[3]) || 0,
+        knockouts: 0, submissions: 0,
+      } : { wins: 0, losses: 0, draws: 0, knockouts: 0, submissions: 0 },
+      weightClass: weightMatch ? `Women's ${weightMatch[1]}` : '',
+      discipline: ['mma'],
+    });
+
+    res.status(201).json({ success: true, data: fighter, message: `Imported ${name} from mma.social` });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// POST /api/admin/import/bulk-mma-social - Bulk import from mma.social rankings
+// ---------------------------------------------------------------------------
+router.post('/import/bulk-mma-social', async (req, res, next) => {
+  try {
+    const { slugs } = req.body; // array of fighter slugs
+    if (!slugs || !Array.isArray(slugs)) {
+      return res.status(400).json({ success: false, message: 'Array of slugs is required' });
+    }
+
+    let imported = 0, skipped = 0;
+    const results = [];
+
+    for (const slug of slugs.slice(0, 50)) { // max 50 at a time
+      const existing = await User.findOne({ slug });
+      if (existing) { skipped++; continue; }
+
+      const name = slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      await User.create({
+        name, email: `${slug}@unclaimed.combatgirls.tv`, role: 'athlete',
+        profileStatus: 'unclaimed', verified: false, slug,
+        bio: 'MMA Fighter', mmaSocialUrl: `https://mma.social/fighters/${slug}/`,
+        discipline: ['mma'],
+      });
+      imported++;
+      results.push(name);
+    }
+
+    res.json({
+      success: true,
+      data: { imported, skipped, fighters: results },
+      message: `Imported ${imported} fighters, skipped ${skipped} duplicates`,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;

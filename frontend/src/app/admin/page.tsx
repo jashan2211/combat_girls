@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Users, Video, Calendar, Shield, BarChart3,
   CheckCircle, XCircle, Eye, Ban, Search, ChevronDown,
   TrendingUp, DollarSign, UserPlus, PlayCircle, UserCheck,
-  ExternalLink,
+  ExternalLink, LogOut, Lock,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -46,8 +46,91 @@ const pendingClaims = [
 type Tab = 'overview' | 'users' | 'videos' | 'events' | 'moderation' | 'claims' | 'analytics';
 
 export default function AdminDashboard() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loginForm, setLoginForm] = useState({ username: '', password: '' });
+  const [loginError, setLoginError] = useState('');
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (loginForm.username === 'admin' && loginForm.password === 'CombatAdmin') {
+      setIsLoggedIn(true);
+      setLoginError('');
+    } else {
+      setLoginError('Invalid credentials. Please try again.');
+    }
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setLoginForm({ username: '', password: '' });
+    setLoginError('');
+    setActiveTab('overview');
+  };
+
+  // Login Gate
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-dark-900 flex items-center justify-center px-4">
+        <div className="w-full max-w-sm">
+          <div className="card p-8">
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-brand-red/10 mb-4">
+                <Lock className="h-7 w-7 text-brand-red" />
+              </div>
+              <h1 className="text-xl font-display font-bold text-white">Admin Access</h1>
+              <p className="text-sm text-dark-300 mt-1">Sign in to manage Combat Girls</p>
+            </div>
+
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-dark-100 mb-1.5">
+                  Username
+                </label>
+                <input
+                  type="text"
+                  value={loginForm.username}
+                  onChange={(e) => setLoginForm((prev) => ({ ...prev, username: e.target.value }))}
+                  placeholder="Enter username"
+                  className="input-field"
+                  autoComplete="username"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-dark-100 mb-1.5">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  value={loginForm.password}
+                  onChange={(e) => setLoginForm((prev) => ({ ...prev, password: e.target.value }))}
+                  placeholder="Enter password"
+                  className="input-field"
+                  autoComplete="current-password"
+                />
+              </div>
+
+              {loginError && (
+                <p className="text-sm text-red-400 text-center">{loginError}</p>
+              )}
+
+              <button type="submit" className="btn-primary w-full py-3 text-center">
+                Login
+              </button>
+            </form>
+
+            <div className="mt-6 text-center">
+              <Link href="/" className="text-sm text-dark-300 hover:text-white transition-colors">
+                Back to site
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
     { id: 'overview', label: 'Overview', icon: <LayoutDashboard size={18} /> },
@@ -82,6 +165,13 @@ export default function AdminDashboard() {
             <Link href="/" className="text-sm text-dark-200 hover:text-white transition-colors">
               Back to Site
             </Link>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 text-sm text-dark-200 hover:text-red-400 transition-colors"
+            >
+              <LogOut size={16} />
+              Logout
+            </button>
           </div>
         </div>
       </header>
