@@ -8,7 +8,8 @@ const { createServer } = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 const fs = require('fs');
-require('dotenv').config();
+// Load .env only if it exists (dev only). Platform env vars (Hostinger) take priority.
+require('dotenv').config({ override: false });
 
 const app = express();
 const httpServer = createServer(app);
@@ -144,18 +145,27 @@ app.use((err, _req, res, _next) => {
 // Database connection & server start
 // ---------------------------------------------------------------------------
 const PORT = process.env.PORT || 5000;
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/combat_girls';
 
+console.log('Starting COMBAT GIRLS server...');
+console.log('PORT:', PORT);
+console.log('MONGODB_URI:', MONGODB_URI.includes('mongodb+srv') ? 'Atlas (cloud)' : 'localhost');
+console.log('NODE_ENV:', process.env.NODE_ENV || 'development');
+
+// Start server immediately (don't wait for DB — serves frontend even if DB is down)
+httpServer.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
+// Connect to MongoDB
 mongoose
-  .connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/combat_girls')
+  .connect(MONGODB_URI)
   .then(() => {
-    console.log('MongoDB connected');
-    httpServer.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
+    console.log('MongoDB connected successfully');
   })
   .catch((err) => {
     console.error('MongoDB connection error:', err.message);
-    process.exit(1);
+    console.error('Server will continue running but API calls will fail.');
   });
 
 module.exports = { app, io };
