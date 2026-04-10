@@ -1,0 +1,8 @@
+# COMBAT GIRLS - Women's Combat Sports TV
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /upload
+
+Sitemap: https://combatgirls.tv/sitemap.xml
