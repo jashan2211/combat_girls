@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Play, Eye } from 'lucide-react';
+import { Play, Eye, Trophy, Target, Users, Flame, ChevronRight, Star, TrendingUp, Calendar } from 'lucide-react';
 import { cn, formatCount, formatDuration, timeAgo } from '@/lib/utils';
 import { VIDEOS, FEATURED_ATHLETES } from '@/lib/data';
 import Avatar from '@/components/ui/Avatar';
@@ -286,16 +286,117 @@ export default function HomePage() {
         </div>
       </div>
 
+      {/* Quick Actions Row */}
+      <div className="px-4 pt-4">
+        <div className="grid grid-cols-3 gap-3">
+          <Link href="/rankings" className="card-hover p-3 flex flex-col items-center gap-2 text-center">
+            <div className="w-10 h-10 rounded-full bg-brand-gold/10 flex items-center justify-center">
+              <Trophy className="h-5 w-5 text-brand-gold" />
+            </div>
+            <span className="text-xs font-medium text-white">Rankings</span>
+            <span className="text-[10px] text-dark-300">Vote now</span>
+          </Link>
+          <Link href="/predict" className="card-hover p-3 flex flex-col items-center gap-2 text-center">
+            <div className="w-10 h-10 rounded-full bg-brand-red/10 flex items-center justify-center">
+              <Target className="h-5 w-5 text-brand-red" />
+            </div>
+            <span className="text-xs font-medium text-white">Predict</span>
+            <span className="text-[10px] text-dark-300">Pick winners</span>
+          </Link>
+          <Link href="/community" className="card-hover p-3 flex flex-col items-center gap-2 text-center">
+            <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+              <Users className="h-5 w-5 text-blue-400" />
+            </div>
+            <span className="text-xs font-medium text-white">Community</span>
+            <span className="text-[10px] text-dark-300">Join polls</span>
+          </Link>
+        </div>
+      </div>
+
+      {/* Trending Fighters */}
+      <div className="px-4 pt-5">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-white flex items-center gap-1.5">
+            <Flame className="h-4 w-4 text-brand-red" /> Trending Fighters
+          </h2>
+          <Link href="/rankings" className="text-xs text-brand-red hover:text-brand-red-light flex items-center gap-0.5">
+            View All <ChevronRight className="h-3 w-3" />
+          </Link>
+        </div>
+        <div className="flex gap-3 overflow-x-auto no-scrollbar">
+          {FEATURED_ATHLETES.slice(0, 6).map((athlete, i) => (
+            <Link key={athlete.slug} href={`/profile/${athlete.slug}`} className="shrink-0 flex items-center gap-2.5 bg-dark-800 rounded-xl px-3 py-2 border border-dark-600 hover:border-dark-400 transition-colors">
+              <span className="text-xs font-bold text-dark-300 w-4">{i + 1}</span>
+              <img src={athlete.image} alt={athlete.name} className="w-8 h-8 rounded-full object-cover" />
+              <div>
+                <p className="text-xs font-medium text-white">{athlete.name.split(' ')[0]}</p>
+                <p className="text-[10px] text-dark-300">{athlete.record ? `${athlete.record.wins}-${athlete.record.losses}` : ''}</p>
+              </div>
+              <TrendingUp className="h-3 w-3 text-green-400 ml-1" />
+            </Link>
+          ))}
+        </div>
+      </div>
+
       {/* Video Feed Grid */}
-      <div className="px-4 pt-4 pb-4">
+      <div className="px-4 pt-5 pb-4">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-white">Latest Videos</h2>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {mockVideos.map((video) => (
+          {mockVideos.slice(0, 6).map((video) => (
             <VideoFeedCard key={video.id} video={video} />
           ))}
         </div>
       </div>
 
-      {/* Infinite scroll placeholder */}
+      {/* Upcoming Fight Card */}
+      <div className="px-4 py-4">
+        <div className="card overflow-hidden">
+          <div className="bg-gradient-to-r from-brand-red/20 to-brand-gold/20 p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold text-white flex items-center gap-1.5">
+                <Calendar className="h-4 w-4" /> Next Fight
+              </h2>
+              <span className="text-[10px] text-dark-200">Apr 26, 2026</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <img src="/fighters/alexa-grasso.png" alt="Alexa Grasso" className="w-14 h-14 rounded-full object-cover border-2 border-brand-red" />
+                <div>
+                  <p className="text-sm font-bold text-white">Alexa Grasso</p>
+                  <p className="text-[10px] text-dark-200">16-3-1 (W)</p>
+                </div>
+              </div>
+              <div className="text-center">
+                <span className="text-brand-red font-display text-lg font-bold">VS</span>
+                <p className="text-[10px] text-dark-300">Flyweight</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="text-right">
+                  <p className="text-sm font-bold text-white">Valentina S.</p>
+                  <p className="text-[10px] text-dark-200">24-4-0</p>
+                </div>
+                <img src="/fighters/valentina-shevchenko.png" alt="Valentina Shevchenko" className="w-14 h-14 rounded-full object-cover border-2 border-brand-gold" />
+              </div>
+            </div>
+            <Link href="/predict" className="block mt-3">
+              <button className="w-full btn-primary text-sm py-2">Make Your Prediction</button>
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* More Videos */}
+      <div className="px-4 pb-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {mockVideos.slice(6).map((video) => (
+            <VideoFeedCard key={video.id + '-more'} video={video} />
+          ))}
+        </div>
+      </div>
+
+      {/* Load more */}
       <div className="flex items-center justify-center py-8">
         <div className="flex items-center gap-2 text-dark-300 text-sm">
           <div className="h-1.5 w-1.5 rounded-full bg-dark-400 animate-pulse" />

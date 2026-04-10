@@ -14,6 +14,10 @@ import {
   Compass,
   TrendingUp,
   Settings,
+  Trophy,
+  Target,
+  Users,
+  Flame,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Avatar from '@/components/ui/Avatar';
@@ -31,6 +35,9 @@ const sidebarNavItems = [
   { href: '/', icon: Home, label: 'Home' },
   { href: '/shorts', icon: Play, label: 'Shorts' },
   { href: '/explore', icon: Compass, label: 'Explore' },
+  { href: '/rankings', icon: Trophy, label: 'Rankings' },
+  { href: '/predict', icon: Target, label: 'Predict' },
+  { href: '/community', icon: Users, label: 'Community' },
   { href: '/events', icon: Calendar, label: 'Events' },
   { href: '/upload', icon: PlusCircle, label: 'Upload' },
   { href: '/profile/me', icon: User, label: 'Profile' },
