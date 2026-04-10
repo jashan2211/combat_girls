@@ -189,12 +189,12 @@ function VideoFeedCard({ video }: { video: (typeof mockVideos)[0] }) {
               {video.fighters.fighter1.image && (
                 <img src={video.fighters.fighter1.image} alt="" className="w-4 h-4 rounded-full object-cover" />
               )}
-              <span className="text-white font-medium">{video.fighters.fighter1.name}</span>
+              <Link href={`/profile/${video.fighters.fighter1.slug}`} className="text-white font-medium hover:text-brand-red transition-colors" onClick={(e) => e.stopPropagation()}>{video.fighters.fighter1.name}</Link>
               <span className="text-brand-red font-bold">vs</span>
               {video.fighters.fighter2.image && (
                 <img src={video.fighters.fighter2.image} alt="" className="w-4 h-4 rounded-full object-cover" />
               )}
-              <span className="text-white font-medium">{video.fighters.fighter2.name}</span>
+              <Link href={`/profile/${video.fighters.fighter2.slug}`} className="text-white font-medium hover:text-brand-red transition-colors" onClick={(e) => e.stopPropagation()}>{video.fighters.fighter2.name}</Link>
             </div>
           </div>
         )}
@@ -238,8 +238,9 @@ export default function HomePage() {
       <div className="px-4 pt-4">
         <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
           {mockStories.map((story) => (
-            <button
+            <Link
               key={story.id}
+              href={`/profile/${story.id}`}
               className="flex flex-col items-center gap-1.5 shrink-0"
             >
               <div
@@ -261,7 +262,7 @@ export default function HomePage() {
               <span className="text-[10px] text-dark-100 w-16 text-center truncate">
                 {story.name}
               </span>
-            </button>
+            </Link>
           ))}
         </div>
       </div>

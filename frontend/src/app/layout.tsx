@@ -86,6 +86,10 @@ export default function RootLayout({
       <head>
         <WebsiteJsonLd />
         <OrganizationJsonLd />
+        {/* Google AdSense - replace ca-pub-XXXXX with your actual publisher ID */}
+        <meta name="google-adsense-account" content="ca-pub-XXXXX" />
+        {/* Google Search Console verification - replace with your actual code */}
+        <meta name="google-site-verification" content="YOUR_VERIFICATION_CODE" />
       </head>
       <body className="font-sans min-h-screen bg-dark-900">
         <Providers>

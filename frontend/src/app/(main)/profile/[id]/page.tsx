@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import {
   CheckCircle,
   MapPin,
@@ -15,73 +16,15 @@ import {
   Shield,
   Clock,
   Award,
-  Ruler,
-  Calendar,
-  ArrowUpRight,
-  X,
   Send,
+  AlertTriangle,
 } from 'lucide-react';
 import { cn, formatCount, formatDuration, timeAgo } from '@/lib/utils';
+import { FEATURED_ATHLETES, VIDEOS } from '@/lib/data';
 import Avatar from '@/components/ui/Avatar';
 import Modal from '@/components/ui/Modal';
 
 type ProfileStatus = 'unclaimed' | 'pending' | 'verified';
-
-const mockAthlete = {
-  _id: 'amanda-nunes',
-  name: 'Amanda Nunes',
-  nickname: 'The Lioness',
-  image: '/fighters/amanda-nunes.png',
-  banner: '',
-  role: 'athlete' as const,
-  verified: true,
-  profileStatus: 'unclaimed' as ProfileStatus,
-  bio: 'Two-division UFC champion. Greatest female MMA fighter of all time.',
-  fightRecord: { wins: 23, losses: 5, draws: 0, knockouts: 13, submissions: 4 },
-  weightClass: 'Bantamweight (135)',
-  height: '5\' 8"',
-  reach: '69"',
-  stance: 'Orthodox',
-  dateOfBirth: 'May 30, 1988',
-  gym: 'American Top Team',
-  location: 'Coconut Creek, FL',
-  discipline: ['MMA', 'Boxing', 'BJJ'],
-  socialLinks: {
-    instagram: '@amanda_leoa',
-    twitter: '@Amanda_Leoa',
-    youtube: '',
-    tiktok: '',
-    website: '',
-  },
-  stats: { followers: 2100000, following: 342, totalViews: 48700000, totalVideos: 156 },
-  athleteSubscription: { active: false, tier: 'free' },
-  mmaSocialUrl: '',
-  ufcStatsUrl: 'http://ufcstats.com/fighter-details/example',
-};
-
-const videoIds = [
-  'pZm4Wg5qFT0',
-  'JJL_wGBME48',
-  'EbS-fzLprBU',
-  'g5wZd8KADKY',
-  'otsBRV53TvQ',
-  'dQw4w9WgXcQ',
-  'kJQP7kiw5Fk',
-  'hT_nvWreIhg',
-  '3JZ_D3ELwOQ',
-];
-
-const mockVideos = [
-  { id: 'pv1', ytId: videoIds[0], title: 'My Greatest Knockout - Breaking Down the Cyborg Fight', duration: 845, views: 3420000, createdAt: '2026-04-08T12:00:00Z', sport: 'MMA' },
-  { id: 'pv2', ytId: videoIds[1], title: 'Training Camp Vlog - 6 Weeks Out', duration: 1234, views: 1890000, createdAt: '2026-04-05T10:00:00Z', sport: 'MMA' },
-  { id: 'pv3', ytId: videoIds[2], title: 'Pad Work Drills with Coach Mike', duration: 623, views: 876000, createdAt: '2026-04-01T14:00:00Z', sport: 'Boxing' },
-  { id: 'pv4', ytId: videoIds[3], title: 'Q&A: Retirement, Motherhood and What Is Next', duration: 2156, views: 2340000, createdAt: '2026-03-28T16:00:00Z', sport: 'MMA' },
-  { id: 'pv5', ytId: videoIds[4], title: 'BJJ Rolling Session - Teaching the Next Generation', duration: 1867, views: 654000, createdAt: '2026-03-22T11:00:00Z', sport: 'BJJ' },
-  { id: 'pv6', ytId: videoIds[5], title: 'Fight Night Behind the Scenes - Walkout to Knockout', duration: 945, views: 4120000, createdAt: '2026-03-15T20:00:00Z', sport: 'MMA' },
-  { id: 'pv7', ytId: videoIds[6], title: 'Strength and Conditioning Full Workout', duration: 2489, views: 1230000, createdAt: '2026-03-10T09:00:00Z', sport: 'MMA' },
-  { id: 'pv8', ytId: videoIds[7], title: 'Top 5 Submissions of My Career - Breakdown', duration: 1567, views: 2870000, createdAt: '2026-03-05T13:00:00Z', sport: 'BJJ' },
-  { id: 'pv9', ytId: videoIds[8], title: 'Sparring Session: Heavy Hands Day', duration: 734, views: 987000, createdAt: '2026-02-28T15:00:00Z', sport: 'Boxing' },
-];
 
 const profileTabs = ['Videos', 'Highlights', 'About', 'Events'];
 
@@ -94,6 +37,11 @@ const socialIcons: Record<string, string> = {
 };
 
 export default function ProfilePage() {
+  const params = useParams();
+  const slug = params.id as string;
+
+  const athleteData = FEATURED_ATHLETES.find((a) => a.slug === slug);
+
   const [activeTab, setActiveTab] = useState('Videos');
   const [isFollowing, setIsFollowing] = useState(false);
   const [claimOpen, setClaimOpen] = useState(false);
@@ -101,9 +49,77 @@ export default function ProfilePage() {
   const [claimMessage, setClaimMessage] = useState('');
   const [claimProofUrl, setClaimProofUrl] = useState('');
   const [claimSubmitted, setClaimSubmitted] = useState(false);
-  const athlete = mockAthlete;
 
-  const isPro = athlete.athleteSubscription.active && athlete.athleteSubscription.tier !== 'free';
+  useEffect(() => {
+    if (athleteData) {
+      document.title = `${athleteData.name} | COMBAT GIRLS`;
+    } else {
+      document.title = 'Fighter Not Found | COMBAT GIRLS';
+    }
+  }, [athleteData]);
+
+  if (!athleteData) {
+    return (
+      <div className="max-w-4xl mx-auto flex flex-col items-center justify-center min-h-[60vh] px-4 text-center">
+        <AlertTriangle className="h-12 w-12 text-brand-gold mb-4" />
+        <h1 className="text-2xl font-display font-bold text-white mb-2">
+          Fighter not found
+        </h1>
+        <p className="text-sm text-dark-200 mb-6">
+          We couldn&apos;t find a fighter with the slug &quot;{slug}&quot;.
+        </p>
+        <Link
+          href="/"
+          className="btn-primary px-6 py-2.5 text-sm font-semibold"
+        >
+          Back to Explore
+        </Link>
+      </div>
+    );
+  }
+
+  // Build athlete display object from the central data
+  const athlete = {
+    name: athleteData.name,
+    nickname: athleteData.nickname ?? null,
+    image: athleteData.image,
+    verified: athleteData.verified,
+    profileStatus: 'unclaimed' as ProfileStatus,
+    bio: `${athleteData.name}${athleteData.nickname ? ` "${athleteData.nickname}"` : ''} — professional ${athleteData.discipline} fighter.`,
+    fightRecord: athleteData.record
+      ? {
+          wins: athleteData.record.wins,
+          losses: athleteData.record.losses,
+          draws: athleteData.record.draws,
+          knockouts: athleteData.record.ko,
+          submissions: athleteData.record.sub,
+        }
+      : null,
+    weightClass: athleteData.weightClass ?? null,
+    gym: athleteData.gym ?? null,
+    location: athleteData.location ?? null,
+    discipline: [athleteData.discipline],
+    socialLinks: {} as Record<string, string>,
+    stats: {
+      followers: athleteData.followers,
+      following: 0,
+      totalViews: 0,
+      totalVideos: 0,
+    },
+    athleteSubscription: { active: false, tier: 'free' },
+  };
+
+  // Filter videos that feature this athlete
+  const athleteVideos = VIDEOS.filter((v) =>
+    v.fighters?.some((f) => f.slug === slug)
+  );
+
+  athlete.stats.totalVideos = athleteVideos.length;
+  athlete.stats.totalViews = athleteVideos.reduce((sum, v) => sum + v.views, 0);
+
+  const isPro =
+    athlete.athleteSubscription.active &&
+    athlete.athleteSubscription.tier !== 'free';
 
   const handleClaimSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,9 +158,6 @@ export default function ProfilePage() {
       <div className="relative h-48 md:h-56 bg-dark-700 mt-0">
         {isPro ? (
           <div className="absolute inset-0 bg-gradient-to-r from-brand-gold/20 via-brand-red/20 to-brand-gold/20" />
-        ) : athlete.banner ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={athlete.banner} alt="" className="absolute inset-0 w-full h-full object-cover" />
         ) : null}
         <div className="absolute inset-0 bg-gradient-to-t from-dark-900 via-dark-900/40 to-transparent" />
       </div>
@@ -177,7 +190,9 @@ export default function ProfilePage() {
               )}
             </div>
             {athlete.nickname && (
-              <p className="text-sm text-dark-300 font-medium">&quot;{athlete.nickname}&quot;</p>
+              <p className="text-sm text-dark-300 font-medium">
+                &quot;{athlete.nickname}&quot;
+              </p>
             )}
             <div className="flex flex-wrap gap-1.5 mt-1">
               {athlete.discipline?.map((d) => (
@@ -195,25 +210,33 @@ export default function ProfilePage() {
             <p className="text-lg font-bold text-white">
               {formatCount(athlete.stats.followers)}
             </p>
-            <p className="text-[10px] text-dark-300 uppercase tracking-wider">Followers</p>
+            <p className="text-[10px] text-dark-300 uppercase tracking-wider">
+              Followers
+            </p>
           </div>
           <div className="text-center">
             <p className="text-lg font-bold text-white">
               {formatCount(athlete.stats.following)}
             </p>
-            <p className="text-[10px] text-dark-300 uppercase tracking-wider">Following</p>
+            <p className="text-[10px] text-dark-300 uppercase tracking-wider">
+              Following
+            </p>
           </div>
           <div className="text-center">
             <p className="text-lg font-bold text-white">
               {athlete.stats.totalVideos}
             </p>
-            <p className="text-[10px] text-dark-300 uppercase tracking-wider">Videos</p>
+            <p className="text-[10px] text-dark-300 uppercase tracking-wider">
+              Videos
+            </p>
           </div>
           <div className="text-center">
             <p className="text-lg font-bold text-white">
               {formatCount(athlete.stats.totalViews)}
             </p>
-            <p className="text-[10px] text-dark-300 uppercase tracking-wider">Views</p>
+            <p className="text-[10px] text-dark-300 uppercase tracking-wider">
+              Views
+            </p>
           </div>
         </div>
 
@@ -254,43 +277,14 @@ export default function ProfilePage() {
               <span>{athlete.fightRecord.knockouts} KO/TKO</span>
               <span>{athlete.fightRecord.submissions} SUB</span>
               <span>
-                {athlete.fightRecord.wins - athlete.fightRecord.knockouts - athlete.fightRecord.submissions} DEC
+                {athlete.fightRecord.wins -
+                  athlete.fightRecord.knockouts -
+                  athlete.fightRecord.submissions}{' '}
+                DEC
               </span>
             </div>
           </div>
         )}
-
-        {/* Physical Stats */}
-        <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {athlete.height && (
-            <div className="p-3 bg-dark-800 rounded-xl border border-dark-600 text-center">
-              <Ruler className="h-4 w-4 text-dark-400 mx-auto mb-1" />
-              <p className="text-sm font-bold text-white">{athlete.height}</p>
-              <p className="text-[10px] text-dark-400 uppercase">Height</p>
-            </div>
-          )}
-          {athlete.reach && (
-            <div className="p-3 bg-dark-800 rounded-xl border border-dark-600 text-center">
-              <ArrowUpRight className="h-4 w-4 text-dark-400 mx-auto mb-1" />
-              <p className="text-sm font-bold text-white">{athlete.reach}</p>
-              <p className="text-[10px] text-dark-400 uppercase">Reach</p>
-            </div>
-          )}
-          {athlete.stance && (
-            <div className="p-3 bg-dark-800 rounded-xl border border-dark-600 text-center">
-              <Dumbbell className="h-4 w-4 text-dark-400 mx-auto mb-1" />
-              <p className="text-sm font-bold text-white">{athlete.stance}</p>
-              <p className="text-[10px] text-dark-400 uppercase">Stance</p>
-            </div>
-          )}
-          {athlete.dateOfBirth && (
-            <div className="p-3 bg-dark-800 rounded-xl border border-dark-600 text-center">
-              <Calendar className="h-4 w-4 text-dark-400 mx-auto mb-1" />
-              <p className="text-sm font-bold text-white">{athlete.dateOfBirth}</p>
-              <p className="text-[10px] text-dark-400 uppercase">Born</p>
-            </div>
-          )}
-        </div>
 
         {/* Info */}
         <div className="flex flex-wrap gap-4 mt-4 text-sm text-dark-200">
@@ -324,32 +318,12 @@ export default function ProfilePage() {
                   href="#"
                   className="h-8 px-2.5 rounded-lg bg-dark-700 flex items-center justify-center text-[10px] font-bold text-dark-200 hover:bg-dark-600 hover:text-white transition-colors border border-dark-500 gap-1"
                 >
-                  {socialIcons[platform] || <ExternalLink className="h-3 w-3" />}
+                  {socialIcons[platform] || (
+                    <ExternalLink className="h-3 w-3" />
+                  )}
                   <span className="text-dark-300 font-normal">{handle}</span>
                 </a>
               )
-          )}
-          {athlete.mmaSocialUrl && (
-            <a
-              href={athlete.mmaSocialUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="h-8 px-3 rounded-lg bg-dark-700 flex items-center justify-center text-[10px] font-bold text-brand-gold hover:bg-dark-600 transition-colors border border-dark-500 gap-1"
-            >
-              MMA.social
-              <ExternalLink className="h-3 w-3" />
-            </a>
-          )}
-          {athlete.ufcStatsUrl && (
-            <a
-              href={athlete.ufcStatsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="h-8 px-3 rounded-lg bg-dark-700 flex items-center justify-center text-[10px] font-bold text-dark-200 hover:bg-dark-600 hover:text-white transition-colors border border-dark-500 gap-1"
-            >
-              UFC Stats
-              <ExternalLink className="h-3 w-3" />
-            </a>
           )}
         </div>
 
@@ -400,75 +374,97 @@ export default function ProfilePage() {
       {/* Tab Content */}
       <div className="px-4 py-4">
         {activeTab === 'Videos' && (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {mockVideos.map((video) => (
-              <Link
-                key={video.id}
-                href={`/watch/${video.id}`}
-                className="group"
-              >
-                <div className="relative aspect-video bg-dark-700 rounded-xl overflow-hidden">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={`https://img.youtube.com/vi/${video.ytId}/hqdefault.jpg`}
-                    alt={video.title}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-dark-900/30">
-                    <div className="h-10 w-10 rounded-full bg-dark-900/60 flex items-center justify-center">
-                      <Play className="h-5 w-5 text-white ml-0.5" fill="white" />
+          <div>
+            {athleteVideos.length === 0 ? (
+              <p className="text-sm text-dark-300 text-center py-8">
+                No videos found for this fighter yet.
+              </p>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {athleteVideos.map((video) => (
+                  <Link
+                    key={video.id}
+                    href={`/watch/${video.id}`}
+                    className="group"
+                  >
+                    <div className="relative aspect-video bg-dark-700 rounded-xl overflow-hidden">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={video.thumbnail}
+                        alt={video.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-dark-900/30">
+                        <div className="h-10 w-10 rounded-full bg-dark-900/60 flex items-center justify-center">
+                          <Play
+                            className="h-5 w-5 text-white ml-0.5"
+                            fill="white"
+                          />
+                        </div>
+                      </div>
+                      <span className="absolute bottom-1.5 right-1.5 bg-dark-900/80 text-white text-[10px] font-medium px-1.5 py-0.5 rounded">
+                        {formatDuration(video.duration)}
+                      </span>
                     </div>
-                  </div>
-                  <span className="absolute bottom-1.5 right-1.5 bg-dark-900/80 text-white text-[10px] font-medium px-1.5 py-0.5 rounded">
-                    {formatDuration(video.duration)}
-                  </span>
-                </div>
-                <h3 className="text-xs font-medium text-white mt-1.5 line-clamp-2">
-                  {video.title}
-                </h3>
-                <div className="flex items-center gap-1.5 text-[10px] text-dark-300 mt-0.5">
-                  <Eye className="h-3 w-3" />
-                  {formatCount(video.views)} views
-                  <span>-</span>
-                  <span>{timeAgo(video.createdAt)}</span>
-                </div>
-              </Link>
-            ))}
+                    <h3 className="text-xs font-medium text-white mt-1.5 line-clamp-2">
+                      {video.title}
+                    </h3>
+                    <div className="flex items-center gap-1.5 text-[10px] text-dark-300 mt-0.5">
+                      <Eye className="h-3 w-3" />
+                      {formatCount(video.views)} views
+                      <span>-</span>
+                      <span>{timeAgo(video.createdAt)}</span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
         {activeTab === 'Highlights' && (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {mockVideos.slice(0, 4).map((video) => (
-              <Link
-                key={video.id}
-                href={`/watch/${video.id}`}
-                className="group"
-              >
-                <div className="relative aspect-video bg-dark-700 rounded-xl overflow-hidden">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={`https://img.youtube.com/vi/${video.ytId}/hqdefault.jpg`}
-                    alt={video.title}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-dark-900/30">
-                    <div className="h-10 w-10 rounded-full bg-dark-900/60 flex items-center justify-center">
-                      <Play className="h-5 w-5 text-white ml-0.5" fill="white" />
+          <div>
+            {athleteVideos.length === 0 ? (
+              <p className="text-sm text-dark-300 text-center py-8">
+                No highlights available yet.
+              </p>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {athleteVideos.slice(0, 4).map((video) => (
+                  <Link
+                    key={video.id}
+                    href={`/watch/${video.id}`}
+                    className="group"
+                  >
+                    <div className="relative aspect-video bg-dark-700 rounded-xl overflow-hidden">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={video.thumbnail}
+                        alt={video.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-dark-900/30">
+                        <div className="h-10 w-10 rounded-full bg-dark-900/60 flex items-center justify-center">
+                          <Play
+                            className="h-5 w-5 text-white ml-0.5"
+                            fill="white"
+                          />
+                        </div>
+                      </div>
+                      <span className="absolute top-1.5 left-1.5 badge-gold text-[8px]">
+                        HIGHLIGHT
+                      </span>
+                      <span className="absolute bottom-1.5 right-1.5 bg-dark-900/80 text-white text-[10px] font-medium px-1.5 py-0.5 rounded">
+                        {formatDuration(video.duration)}
+                      </span>
                     </div>
-                  </div>
-                  <span className="absolute top-1.5 left-1.5 badge-gold text-[8px]">
-                    HIGHLIGHT
-                  </span>
-                  <span className="absolute bottom-1.5 right-1.5 bg-dark-900/80 text-white text-[10px] font-medium px-1.5 py-0.5 rounded">
-                    {formatDuration(video.duration)}
-                  </span>
-                </div>
-                <h3 className="text-xs font-medium text-white mt-1.5 line-clamp-2">
-                  {video.title}
-                </h3>
-              </Link>
-            ))}
+                    <h3 className="text-xs font-medium text-white mt-1.5 line-clamp-2">
+                      {video.title}
+                    </h3>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -476,19 +472,36 @@ export default function ProfilePage() {
           <div className="space-y-6">
             <div>
               <h3 className="text-sm font-semibold text-white mb-2">About</h3>
-              <p className="text-sm text-dark-100 leading-relaxed">{athlete.bio}</p>
+              <p className="text-sm text-dark-100 leading-relaxed">
+                {athlete.bio}
+              </p>
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-white mb-2">Details</h3>
+              <h3 className="text-sm font-semibold text-white mb-2">
+                Details
+              </h3>
               <div className="space-y-2 text-sm text-dark-200">
-                <p><span className="text-dark-300">Weight Class:</span> {athlete.weightClass}</p>
-                <p><span className="text-dark-300">Height:</span> {athlete.height}</p>
-                <p><span className="text-dark-300">Reach:</span> {athlete.reach}</p>
-                <p><span className="text-dark-300">Stance:</span> {athlete.stance}</p>
-                <p><span className="text-dark-300">Date of Birth:</span> {athlete.dateOfBirth}</p>
-                <p><span className="text-dark-300">Gym:</span> {athlete.gym}</p>
-                <p><span className="text-dark-300">Location:</span> {athlete.location}</p>
-                <p><span className="text-dark-300">Disciplines:</span> {athlete.discipline?.join(', ')}</p>
+                {athlete.weightClass && (
+                  <p>
+                    <span className="text-dark-300">Weight Class:</span>{' '}
+                    {athlete.weightClass}
+                  </p>
+                )}
+                {athlete.gym && (
+                  <p>
+                    <span className="text-dark-300">Gym:</span> {athlete.gym}
+                  </p>
+                )}
+                {athlete.location && (
+                  <p>
+                    <span className="text-dark-300">Location:</span>{' '}
+                    {athlete.location}
+                  </p>
+                )}
+                <p>
+                  <span className="text-dark-300">Disciplines:</span>{' '}
+                  {athlete.discipline?.join(', ')}
+                </p>
               </div>
             </div>
           </div>
@@ -496,42 +509,9 @@ export default function ProfilePage() {
 
         {activeTab === 'Events' && (
           <div className="space-y-3">
-            <div className="card p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="badge-gold text-[10px]">UPCOMING</span>
-                <span className="text-xs text-dark-300">April 26, 2026</span>
-              </div>
-              <h3 className="text-sm font-semibold text-white">
-                Combat Girls FC 12: Championship Night
-              </h3>
-              <p className="text-xs text-dark-200 mt-0.5">
-                vs Kayla Harrison - Bantamweight Co-Main Event
-              </p>
-            </div>
-            <div className="card p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-[10px] text-dark-300 bg-dark-600 px-2 py-0.5 rounded-full">PAST</span>
-                <span className="text-xs text-dark-300">March 15, 2026</span>
-              </div>
-              <h3 className="text-sm font-semibold text-white">
-                Combat Girls FC 11: Unfinished Business
-              </h3>
-              <p className="text-xs text-dark-200 mt-0.5">
-                vs Cris Cyborg - TKO Round 1 (W)
-              </p>
-            </div>
-            <div className="card p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-[10px] text-dark-300 bg-dark-600 px-2 py-0.5 rounded-full">PAST</span>
-                <span className="text-xs text-dark-300">January 20, 2026</span>
-              </div>
-              <h3 className="text-sm font-semibold text-white">
-                Combat Girls FC 10: New Era
-              </h3>
-              <p className="text-xs text-dark-200 mt-0.5">
-                vs Holly Holm - Decision Round 5 (W)
-              </p>
-            </div>
+            <p className="text-sm text-dark-300 text-center py-8">
+              No upcoming events for {athlete.name}.
+            </p>
           </div>
         )}
       </div>
@@ -543,7 +523,9 @@ export default function ProfilePage() {
           setClaimOpen(false);
           setClaimSubmitted(false);
         }}
-        title={claimSubmitted ? 'Claim Submitted' : `Prove you are ${athlete.name}`}
+        title={
+          claimSubmitted ? 'Claim Submitted' : `Prove you are ${athlete.name}`
+        }
         size="sm"
       >
         {claimSubmitted ? (
@@ -607,7 +589,10 @@ export default function ProfilePage() {
                 className="input-field"
               />
             </div>
-            <button type="submit" className="btn-primary w-full flex items-center justify-center gap-2">
+            <button
+              type="submit"
+              className="btn-primary w-full flex items-center justify-center gap-2"
+            >
               <Send className="h-4 w-4" />
               Submit Claim Request
             </button>
