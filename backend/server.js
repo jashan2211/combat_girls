@@ -89,7 +89,13 @@ app.get('/api/health', (_req, res) => {
 // ---------------------------------------------------------------------------
 // Serve Next.js static export (production)
 // ---------------------------------------------------------------------------
-const frontendPath = path.join(__dirname, '..', 'frontend', 'out');
+// Check multiple possible frontend build locations
+const possiblePaths = [
+  path.join(__dirname, 'public'),                    // backend/public (copied build)
+  path.join(__dirname, '..', 'frontend', 'out'),     // frontend/out (standard build)
+];
+const frontendPath = possiblePaths.find(p => fs.existsSync(p)) || possiblePaths[0];
+console.log('Frontend path:', frontendPath, '| exists:', fs.existsSync(frontendPath));
 if (fs.existsSync(frontendPath)) {
   // Serve static assets
   app.use(express.static(frontendPath));
