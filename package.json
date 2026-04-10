@@ -1,0 +1,14 @@
+{
+  "name": "combat-girls",
+  "version": "1.0.0",
+  "description": "COMBAT GIRLS - Women's Combat Sports TV",
+  "scripts": {
+    "install:all": "cd backend && npm install && cd ../frontend && npm install",
+    "build": "cd frontend && npm run build",
+    "start": "node backend/server.js",
+    "dev": "cd backend && npm run dev"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

@@ -11,3 +11,5 @@ build/
 coverage/
 .vercel
 .claude/
+frontend/.next/
+frontend/node_modules/

@@ -11,6 +11,8 @@ const nextConfig = {
       { protocol: 'https', hostname: 'ui-avatars.com' },
     ],
   },
+  // Static export for Hostinger deployment (served by Express)
+  output: 'export',
   // SEO: trailing slashes for consistent URLs
   trailingSlash: false,
   // Compression

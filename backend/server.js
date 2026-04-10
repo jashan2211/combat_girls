@@ -6,6 +6,8 @@ const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
+const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
@@ -84,11 +86,46 @@ app.get('/api/health', (_req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// 404 handler
+// Serve Next.js static export (production)
 // ---------------------------------------------------------------------------
-app.use((_req, res) => {
-  res.status(404).json({ success: false, message: 'Route not found' });
-});
+const frontendPath = path.join(__dirname, '..', 'frontend', 'out');
+if (fs.existsSync(frontendPath)) {
+  // Serve static assets
+  app.use(express.static(frontendPath));
+
+  // SPA fallback: serve index.html for all non-API routes
+  app.get('*', (req, res) => {
+    // Don't serve index.html for API routes
+    if (req.path.startsWith('/api/')) {
+      return res.status(404).json({ success: false, message: 'Route not found' });
+    }
+
+    // Try to serve the exact file (e.g., /profile/amanda-nunes.html)
+    const htmlFile = path.join(frontendPath, req.path + '.html');
+    if (fs.existsSync(htmlFile)) {
+      return res.sendFile(htmlFile);
+    }
+
+    // Try index.html inside directory (e.g., /profile/amanda-nunes/index.html)
+    const indexFile = path.join(frontendPath, req.path, 'index.html');
+    if (fs.existsSync(indexFile)) {
+      return res.sendFile(indexFile);
+    }
+
+    // Fallback to root index.html (client-side routing)
+    const rootIndex = path.join(frontendPath, 'index.html');
+    if (fs.existsSync(rootIndex)) {
+      return res.sendFile(rootIndex);
+    }
+
+    res.status(404).json({ success: false, message: 'Page not found' });
+  });
+} else {
+  // No frontend build — API-only mode
+  app.use((_req, res) => {
+    res.status(404).json({ success: false, message: 'Route not found. Frontend not built — run: cd frontend && npm run build' });
+  });
+}
 
 // ---------------------------------------------------------------------------
 // Global error handler

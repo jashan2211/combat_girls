@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { signIn } from 'next-auth/react';
+import { useAuthStore } from '@/lib/store';
+import { authAPI } from '@/lib/api';
 import Link from 'next/link';
 import { User, Mail, Lock, Eye, EyeOff, Shield, Trophy } from 'lucide-react';
 
@@ -33,28 +34,20 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: form.name,
-          email: form.email,
-          password: form.password,
-          role: form.role,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Registration failed');
-
-      // Auto sign in after registration
-      await signIn('credentials', {
+      const res = await authAPI.register({
+        name: form.name,
         email: form.email,
         password: form.password,
-        callbackUrl: form.role === 'athlete' ? '/profile/me' : '/',
+        role: form.role,
       });
+
+      const { token, user } = res.data.data || res.data;
+      const { setToken, setUser } = useAuthStore.getState();
+      setToken(token);
+      setUser(user);
+      window.location.href = form.role === 'athlete' ? '/profile/me' : '/';
     } catch (err: any) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message || 'Registration failed');
     }
     setLoading(false);
   };
@@ -75,7 +68,7 @@ export default function RegisterPage() {
 
           {/* Google Sign Up */}
           <button
-            onClick={() => signIn('google', { callbackUrl: '/' })}
+            onClick={() => alert('Google Sign-In requires OAuth configuration. Use email/password for now.')}
             className="w-full flex items-center justify-center gap-3 bg-white text-dark-900 font-medium py-3 px-4 rounded-xl hover:bg-gray-100 transition-colors mb-4"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">

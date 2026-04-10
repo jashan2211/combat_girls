@@ -1,6 +1,5 @@
 'use client';
 
-import { SessionProvider } from 'next-auth/react';
 import { useEffect } from 'react';
 import { useAuthStore } from '@/lib/store';
 import { authAPI } from '@/lib/api';
@@ -12,7 +11,7 @@ function AuthSync({ children }: { children: React.ReactNode }) {
     if (token) {
       authAPI
         .getMe()
-        .then((res) => setUser(res.data.user))
+        .then((res) => setUser(res.data?.user || res.data))
         .catch(() => setUser(null))
         .finally(() => setLoading(false));
     } else {
@@ -24,9 +23,5 @@ function AuthSync({ children }: { children: React.ReactNode }) {
 }
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  return (
-    <SessionProvider>
-      <AuthSync>{children}</AuthSync>
-    </SessionProvider>
-  );
+  return <AuthSync>{children}</AuthSync>;
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
@@ -16,218 +16,8 @@ import {
   UserPlus,
 } from 'lucide-react';
 import { cn, formatCount, formatDuration, timeAgo } from '@/lib/utils';
+import { VIDEOS_MAP, VIDEOS } from '@/lib/data';
 import Avatar from '@/components/ui/Avatar';
-
-interface VideoData {
-  youtubeId: string;
-  title: string;
-  description: string;
-  athlete: {
-    id: string;
-    name: string;
-    image: string | null;
-    verified: boolean;
-    followers: number;
-  };
-  views: number;
-  likes: number;
-  duration: number;
-  sport: string;
-  category: string;
-  createdAt: string;
-  liked: boolean;
-  saved: boolean;
-}
-
-const defaultVideo: VideoData = {
-  youtubeId: 'pZm4Wg5qFT0',
-  title: 'MOUNTED ARM TRIANGLE CHOKE | Female Jiu Jitsu Match',
-  description:
-    'Welcome to Combat Girls, the home of technical excellence in women\'s combat sports!\n\nWatch this incredible mounted arm triangle choke finish from a female jiu jitsu match. The technique, the timing, the finish - pure grappling excellence.\n\nSubscribe for the best women\'s MMA, BJJ, Wrestling, Boxing and more!\n\nFollow us:\nInstagram: @combat_girls\nYouTube: @combat_girls',
-  athlete: {
-    id: 'combat-girls',
-    name: 'Combat Girls',
-    image: null,
-    verified: true,
-    followers: 47600,
-  },
-  views: 603,
-  likes: 87,
-  duration: 83,
-  sport: 'BJJ',
-  category: 'fight',
-  createdAt: '2026-04-09T14:30:00Z',
-  liked: false,
-  saved: false,
-};
-
-const videosDatabase: Record<string, VideoData> = {
-  'pZm4Wg5qFT0': {
-    ...defaultVideo,
-  },
-  'JJL_wGBME48': {
-    youtubeId: 'JJL_wGBME48',
-    title: '51 KG GIRL VS 78 KG BOY JIU JITSU | Blue Belt Vs White Belt',
-    description:
-      'Can a 51 kg blue belt girl beat a 78 kg white belt boy in jiu jitsu? Watch this amazing match to find out!\n\nThis is what happens when technique meets size and strength. Pure jiu jitsu at its finest.\n\nSubscribe for the best women\'s combat sports content!',
-    athlete: {
-      id: 'combat-girls',
-      name: 'Combat Girls',
-      image: null,
-      verified: true,
-      followers: 47600,
-    },
-    views: 2400,
-    likes: 195,
-    duration: 300,
-    sport: 'BJJ',
-    category: 'fight',
-    createdAt: '2026-04-09T12:00:00Z',
-    liked: false,
-    saved: false,
-  },
-  'EbS-fzLprBU': {
-    youtubeId: 'EbS-fzLprBU',
-    title: 'Tactical BJJ Match! Megan O\'Neal vs. Charlize Balser',
-    description:
-      'An incredibly tactical BJJ match between Megan O\'Neal and Charlize Balser. Watch these two elite grapplers battle it out on the mats.\n\nSubscribe for more women\'s combat sports!',
-    athlete: {
-      id: 'combat-girls',
-      name: 'Combat Girls',
-      image: null,
-      verified: true,
-      followers: 47600,
-    },
-    views: 15000,
-    likes: 1200,
-    duration: 357,
-    sport: 'BJJ',
-    category: 'fight',
-    createdAt: '2026-04-02T10:00:00Z',
-    liked: false,
-    saved: false,
-  },
-  'g5wZd8KADKY': {
-    youtubeId: 'g5wZd8KADKY',
-    title: 'EPIC ENDING! Megan O\'Neal vs. Charlize Balser | JWI 5',
-    description:
-      'What an epic ending to this match! Megan O\'Neal vs. Charlize Balser at JWI 5 delivered one of the most exciting finishes we\'ve ever seen.\n\nSubscribe for more women\'s combat sports content!',
-    athlete: {
-      id: 'combat-girls',
-      name: 'Combat Girls',
-      image: null,
-      verified: true,
-      followers: 47600,
-    },
-    views: 11000,
-    likes: 980,
-    duration: 354,
-    sport: 'BJJ',
-    category: 'fight',
-    createdAt: '2026-04-01T16:00:00Z',
-    liked: false,
-    saved: false,
-  },
-  'otsBRV53TvQ': {
-    youtubeId: 'otsBRV53TvQ',
-    title: 'Yurivia Jimenez vs Veronica Vargas | Best Women\'s MMA',
-    description:
-      'One of the best women\'s MMA fights you\'ll ever see! Yurivia Jimenez takes on Veronica Vargas in an action-packed bout.\n\nSubscribe for the best women\'s MMA, BJJ, Wrestling, Boxing and more!',
-    athlete: {
-      id: 'combat-girls',
-      name: 'Combat Girls',
-      image: null,
-      verified: true,
-      followers: 47600,
-    },
-    views: 89200,
-    likes: 4300,
-    duration: 720,
-    sport: 'MMA',
-    category: 'fight',
-    createdAt: '2026-03-28T14:00:00Z',
-    liked: false,
-    saved: false,
-  },
-  '--TM7wCQFqQ': {
-    youtubeId: '--TM7wCQFqQ',
-    title: 'Jiu Jitsu In a Dress!',
-    description:
-      'Who says you can\'t do jiu jitsu in a dress? Watch this amazing short!\n\nSubscribe for the best women\'s combat sports content!',
-    athlete: {
-      id: 'combat-girls',
-      name: 'Combat Girls',
-      image: null,
-      verified: true,
-      followers: 47600,
-    },
-    views: 42300,
-    likes: 3100,
-    duration: 45,
-    sport: 'BJJ',
-    category: 'shorts',
-    createdAt: '2026-04-05T08:00:00Z',
-    liked: false,
-    saved: false,
-  },
-};
-
-const allRelatedVideos = [
-  {
-    id: 'pZm4Wg5qFT0',
-    title: 'MOUNTED ARM TRIANGLE CHOKE | Female Jiu Jitsu Match',
-    thumbnail: 'https://img.youtube.com/vi/pZm4Wg5qFT0/hqdefault.jpg',
-    athlete: 'Combat Girls',
-    views: 603,
-    duration: 83,
-    createdAt: '2026-04-09T14:30:00Z',
-  },
-  {
-    id: 'JJL_wGBME48',
-    title: '51 KG GIRL VS 78 KG BOY JIU JITSU | Blue Belt Vs White Belt',
-    thumbnail: 'https://img.youtube.com/vi/JJL_wGBME48/hqdefault.jpg',
-    athlete: 'Combat Girls',
-    views: 2400,
-    duration: 300,
-    createdAt: '2026-04-09T12:00:00Z',
-  },
-  {
-    id: 'EbS-fzLprBU',
-    title: 'Tactical BJJ Match! Megan O\'Neal vs. Charlize Balser',
-    thumbnail: 'https://img.youtube.com/vi/EbS-fzLprBU/hqdefault.jpg',
-    athlete: 'Combat Girls',
-    views: 15000,
-    duration: 357,
-    createdAt: '2026-04-02T10:00:00Z',
-  },
-  {
-    id: 'g5wZd8KADKY',
-    title: 'EPIC ENDING! Megan O\'Neal vs. Charlize Balser | JWI 5',
-    thumbnail: 'https://img.youtube.com/vi/g5wZd8KADKY/hqdefault.jpg',
-    athlete: 'Combat Girls',
-    views: 11000,
-    duration: 354,
-    createdAt: '2026-04-01T16:00:00Z',
-  },
-  {
-    id: 'otsBRV53TvQ',
-    title: 'Yurivia Jimenez vs Veronica Vargas | Best Women\'s MMA',
-    thumbnail: 'https://img.youtube.com/vi/otsBRV53TvQ/hqdefault.jpg',
-    athlete: 'Combat Girls',
-    views: 89200,
-    duration: 720,
-    createdAt: '2026-03-28T14:00:00Z',
-  },
-  {
-    id: '--TM7wCQFqQ',
-    title: 'Jiu Jitsu In a Dress!',
-    thumbnail: 'https://img.youtube.com/vi/--TM7wCQFqQ/hqdefault.jpg',
-    athlete: 'Combat Girls',
-    views: 42300,
-    duration: 45,
-    createdAt: '2026-04-05T08:00:00Z',
-  },
-];
 
 const mockComments = [
   {
@@ -264,30 +54,77 @@ export default function WatchPage() {
   const params = useParams();
   const videoId = params.id as string;
 
-  const videoData = videosDatabase[videoId] ?? {
-    ...defaultVideo,
-    youtubeId: videoId,
-    title: `Video ${videoId}`,
-  };
+  // Look up the video from the central data store
+  const videoItem = VIDEOS_MAP[videoId];
 
-  const [video, setVideo] = useState(videoData);
+  const [liked, setLiked] = useState(false);
+  const [likes, setLikes] = useState(videoItem?.views ? Math.round(videoItem.views * 0.05) : 87);
+  const [saved, setSaved] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [isFollowing, setIsFollowing] = useState(false);
 
-  const relatedVideos = allRelatedVideos.filter((rv) => rv.id !== videoId);
+  const videoTitle = videoItem?.title ?? `Video ${videoId}`;
+  const youtubeId = videoItem?.id ?? videoId;
+  const description = videoItem?.description ?? '';
+  const views = videoItem?.views ?? 0;
+  const sport = videoItem?.sport ?? 'MMA';
+  const createdAt = videoItem?.createdAt ?? new Date().toISOString();
+  const duration = videoItem?.duration ?? 0;
+  const fighters = videoItem?.fighters ?? [];
+
+  useEffect(() => {
+    document.title = `${videoTitle} | COMBAT GIRLS`;
+  }, [videoTitle]);
+
+  // Build sorted related videos: same fighters first, then the rest
+  const currentFighterSlugs = new Set(fighters.map((f) => f.slug));
+  const otherVideos = VIDEOS.filter((v) => v.id !== videoId);
+
+  const relatedVideos = [...otherVideos].sort((a, b) => {
+    const aMatch = a.fighters?.some((f) => currentFighterSlugs.has(f.slug)) ? 1 : 0;
+    const bMatch = b.fighters?.some((f) => currentFighterSlugs.has(f.slug)) ? 1 : 0;
+    if (bMatch !== aMatch) return bMatch - aMatch;
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
 
   const toggleLike = () => {
-    setVideo((v) => ({
-      ...v,
-      liked: !v.liked,
-      likes: v.liked ? v.likes - 1 : v.likes + 1,
-    }));
+    setLiked((prev) => !prev);
+    setLikes((prev) => (liked ? prev - 1 : prev + 1));
   };
 
   const toggleSave = () => {
-    setVideo((v) => ({ ...v, saved: !v.saved }));
+    setSaved((prev) => !prev);
   };
+
+  function RelatedVideoCard({ rv }: { rv: (typeof relatedVideos)[0] }) {
+    return (
+      <Link href={`/watch/${rv.id}`} className="flex gap-3 group">
+        <div className="relative shrink-0 w-40 aspect-video bg-dark-700 rounded-lg overflow-hidden">
+          <img
+            src={rv.thumbnail}
+            alt={rv.title}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <Play className="h-6 w-6 text-white" fill="white" />
+          </div>
+          <span className="absolute bottom-1 right-1 bg-dark-900/80 text-white text-[9px] font-medium px-1 py-0.5 rounded">
+            {formatDuration(rv.duration)}
+          </span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <h4 className="text-xs font-medium text-white line-clamp-2 leading-snug">
+            {rv.title}
+          </h4>
+          <p className="text-[10px] text-dark-300 mt-1">Combat Girls</p>
+          <p className="text-[10px] text-dark-300">
+            {formatCount(rv.views)} views - {timeAgo(rv.createdAt)}
+          </p>
+        </div>
+      </Link>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto lg:flex lg:gap-6 lg:px-4 lg:py-4">
@@ -296,7 +133,7 @@ export default function WatchPage() {
         {/* YouTube Video Player */}
         <div className="relative aspect-video bg-dark-900 lg:rounded-2xl overflow-hidden">
           <iframe
-            src={`https://www.youtube.com/embed/${video.youtubeId}?rel=0&modestbranding=1`}
+            src={`https://www.youtube.com/embed/${youtubeId}?rel=0&modestbranding=1`}
             className="absolute inset-0 w-full h-full"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
@@ -307,15 +144,15 @@ export default function WatchPage() {
         <div className="px-4 lg:px-0">
           {/* Title & Stats */}
           <h1 className="text-lg md:text-xl font-semibold text-white mt-3 leading-snug">
-            {video.title}
+            {videoTitle}
           </h1>
           <div className="flex items-center gap-3 mt-2 text-sm text-dark-200">
             <span className="flex items-center gap-1">
               <Eye className="h-3.5 w-3.5" />
-              {formatCount(video.views)} views
+              {formatCount(views)} views
             </span>
-            <span>{timeAgo(video.createdAt)}</span>
-            <span className="badge-red text-[10px]">{video.sport}</span>
+            <span>{timeAgo(createdAt)}</span>
+            <span className="badge-red text-[10px]">{sport}</span>
           </div>
 
           {/* Action Buttons */}
@@ -324,28 +161,28 @@ export default function WatchPage() {
               onClick={toggleLike}
               className={cn(
                 'flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all',
-                video.liked
+                liked
                   ? 'bg-brand-red/10 text-brand-red'
                   : 'bg-dark-700 text-dark-100 hover:bg-dark-600'
               )}
             >
               <ThumbsUp
-                className={cn('h-4 w-4', video.liked && 'fill-brand-red')}
+                className={cn('h-4 w-4', liked && 'fill-brand-red')}
               />
-              {formatCount(video.likes)}
+              {formatCount(likes)}
             </button>
 
             <button
               onClick={toggleSave}
               className={cn(
                 'flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all',
-                video.saved
+                saved
                   ? 'bg-brand-gold/10 text-brand-gold'
                   : 'bg-dark-700 text-dark-100 hover:bg-dark-600'
               )}
             >
               <Bookmark
-                className={cn('h-4 w-4', video.saved && 'fill-brand-gold')}
+                className={cn('h-4 w-4', saved && 'fill-brand-gold')}
               />
               Save
             </button>
@@ -356,25 +193,126 @@ export default function WatchPage() {
             </button>
           </div>
 
+          {/* Fighters in this video */}
+          {fighters.length >= 2 && (
+            <div className="mt-4 p-4 bg-dark-700 rounded-xl border border-dark-600">
+              <h3 className="text-xs font-semibold text-dark-200 uppercase tracking-wider mb-3">
+                Fighters in this video
+              </h3>
+              <div className="flex items-center justify-center gap-3">
+                {/* Fighter 1 */}
+                <Link
+                  href={`/profile/${fighters[0].slug}`}
+                  className="flex items-center gap-2.5 flex-1 justify-end hover:opacity-80 transition-opacity"
+                >
+                  <div className="text-right">
+                    <p className="text-sm font-semibold text-white">
+                      {fighters[0].name}
+                    </p>
+                  </div>
+                  {fighters[0].image ? (
+                    <img
+                      src={fighters[0].image}
+                      alt={fighters[0].name}
+                      className="w-10 h-10 rounded-full object-cover border border-dark-500"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-dark-600 flex items-center justify-center text-xs font-bold text-dark-200 border border-dark-500">
+                      {fighters[0].name
+                        .split(' ')
+                        .map((n) => n[0])
+                        .join('')
+                        .slice(0, 2)}
+                    </div>
+                  )}
+                </Link>
+
+                {/* VS */}
+                <span className="text-brand-red font-display text-lg font-bold shrink-0 px-2">
+                  VS
+                </span>
+
+                {/* Fighter 2 */}
+                <Link
+                  href={`/profile/${fighters[1].slug}`}
+                  className="flex items-center gap-2.5 flex-1 hover:opacity-80 transition-opacity"
+                >
+                  {fighters[1].image ? (
+                    <img
+                      src={fighters[1].image}
+                      alt={fighters[1].name}
+                      className="w-10 h-10 rounded-full object-cover border border-dark-500"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-dark-600 flex items-center justify-center text-xs font-bold text-dark-200 border border-dark-500">
+                      {fighters[1].name
+                        .split(' ')
+                        .map((n) => n[0])
+                        .join('')
+                        .slice(0, 2)}
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-sm font-semibold text-white">
+                      {fighters[1].name}
+                    </p>
+                  </div>
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {/* Single fighter card */}
+          {fighters.length === 1 && (
+            <div className="mt-4 p-4 bg-dark-700 rounded-xl border border-dark-600">
+              <h3 className="text-xs font-semibold text-dark-200 uppercase tracking-wider mb-3">
+                Fighter in this video
+              </h3>
+              <Link
+                href={`/profile/${fighters[0].slug}`}
+                className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+              >
+                {fighters[0].image ? (
+                  <img
+                    src={fighters[0].image}
+                    alt={fighters[0].name}
+                    className="w-10 h-10 rounded-full object-cover border border-dark-500"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-dark-600 flex items-center justify-center text-xs font-bold text-dark-200 border border-dark-500">
+                    {fighters[0].name
+                      .split(' ')
+                      .map((n) => n[0])
+                      .join('')
+                      .slice(0, 2)}
+                  </div>
+                )}
+                <p className="text-sm font-semibold text-white">
+                  {fighters[0].name}
+                </p>
+              </Link>
+            </div>
+          )}
+
           {/* Athlete Info */}
           <div className="flex items-center gap-3 mt-4 py-3 border-y border-dark-600">
-            <Link href={`/profile/${video.athlete.id}`}>
+            <Link href="/profile/combat-girls">
               <Avatar
-                src={video.athlete.image}
-                name={video.athlete.name}
+                src={null}
+                name="Combat Girls"
                 size="md"
-                verified={video.athlete.verified}
+                verified={true}
               />
             </Link>
             <div className="flex-1 min-w-0">
               <Link
-                href={`/profile/${video.athlete.id}`}
+                href="/profile/combat-girls"
                 className="text-sm font-semibold text-white hover:underline"
               >
-                {video.athlete.name}
+                Combat Girls
               </Link>
               <p className="text-xs text-dark-300">
-                {formatCount(video.athlete.followers)} followers
+                {formatCount(47600)} followers
               </p>
             </div>
             <button
@@ -399,22 +337,24 @@ export default function WatchPage() {
                 !showFullDescription && 'line-clamp-3'
               )}
             >
-              {video.description}
+              {description}
             </p>
-            <button
-              onClick={() => setShowFullDescription(!showFullDescription)}
-              className="flex items-center gap-1 mt-2 text-xs font-medium text-dark-200 hover:text-white transition-colors"
-            >
-              {showFullDescription ? (
-                <>
-                  Show less <ChevronUp className="h-3 w-3" />
-                </>
-              ) : (
-                <>
-                  Show more <ChevronDown className="h-3 w-3" />
-                </>
-              )}
-            </button>
+            {description.length > 120 && (
+              <button
+                onClick={() => setShowFullDescription(!showFullDescription)}
+                className="flex items-center gap-1 mt-2 text-xs font-medium text-dark-200 hover:text-white transition-colors"
+              >
+                {showFullDescription ? (
+                  <>
+                    Show less <ChevronUp className="h-3 w-3" />
+                  </>
+                ) : (
+                  <>
+                    Show more <ChevronDown className="h-3 w-3" />
+                  </>
+                )}
+              </button>
+            )}
           </div>
 
           {/* Comments Section */}
@@ -486,66 +426,24 @@ export default function WatchPage() {
 
       {/* Right Sidebar - Related Videos (desktop) */}
       <aside className="hidden lg:block w-80 shrink-0">
-        <h3 className="text-sm font-semibold text-white mb-3">Related Videos</h3>
+        <h3 className="text-sm font-semibold text-white mb-3">
+          Related Videos
+        </h3>
         <div className="space-y-3">
-          {relatedVideos.map((rv) => (
-            <Link
-              key={rv.id}
-              href={`/watch/${rv.id}`}
-              className="flex gap-3 group"
-            >
-              <div className="relative shrink-0 w-40 aspect-video bg-dark-700 rounded-lg overflow-hidden">
-                <img src={rv.thumbnail} alt={rv.title} className="absolute inset-0 w-full h-full object-cover" />
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Play className="h-6 w-6 text-white" fill="white" />
-                </div>
-                <span className="absolute bottom-1 right-1 bg-dark-900/80 text-white text-[9px] font-medium px-1 py-0.5 rounded">
-                  {formatDuration(rv.duration)}
-                </span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <h4 className="text-xs font-medium text-white line-clamp-2 leading-snug">
-                  {rv.title}
-                </h4>
-                <p className="text-[10px] text-dark-300 mt-1">{rv.athlete}</p>
-                <p className="text-[10px] text-dark-300">
-                  {formatCount(rv.views)} views - {timeAgo(rv.createdAt)}
-                </p>
-              </div>
-            </Link>
+          {relatedVideos.slice(0, 8).map((rv) => (
+            <RelatedVideoCard key={rv.id} rv={rv} />
           ))}
         </div>
       </aside>
 
       {/* Mobile Related Videos */}
       <div className="lg:hidden px-4 pb-8">
-        <h3 className="text-sm font-semibold text-white mb-3">Related Videos</h3>
+        <h3 className="text-sm font-semibold text-white mb-3">
+          Related Videos
+        </h3>
         <div className="space-y-3">
-          {relatedVideos.map((rv) => (
-            <Link
-              key={rv.id}
-              href={`/watch/${rv.id}`}
-              className="flex gap-3 group"
-            >
-              <div className="relative shrink-0 w-36 aspect-video bg-dark-700 rounded-lg overflow-hidden">
-                <img src={rv.thumbnail} alt={rv.title} className="absolute inset-0 w-full h-full object-cover" />
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Play className="h-6 w-6 text-white" fill="white" />
-                </div>
-                <span className="absolute bottom-1 right-1 bg-dark-900/80 text-white text-[9px] font-medium px-1 py-0.5 rounded">
-                  {formatDuration(rv.duration)}
-                </span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <h4 className="text-xs font-medium text-white line-clamp-2 leading-snug">
-                  {rv.title}
-                </h4>
-                <p className="text-[10px] text-dark-300 mt-1">{rv.athlete}</p>
-                <p className="text-[10px] text-dark-300">
-                  {formatCount(rv.views)} views
-                </p>
-              </div>
-            </Link>
+          {relatedVideos.slice(0, 6).map((rv) => (
+            <RelatedVideoCard key={rv.id + '-m'} rv={rv} />
           ))}
         </div>
       </div>

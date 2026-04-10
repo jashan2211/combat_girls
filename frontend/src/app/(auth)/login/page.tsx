@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { signIn } from 'next-auth/react';
+import { useAuthStore } from '@/lib/store';
+import { authAPI } from '@/lib/api';
 import Link from 'next/link';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 
@@ -12,21 +13,21 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const { setToken, setUser } = useAuthStore();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    const result = await signIn('credentials', {
-      email,
-      password,
-      redirect: false,
-    });
-
-    if (result?.error) {
-      setError('Invalid email or password');
-    } else {
+    try {
+      const res = await authAPI.login({ email, password });
+      const { token, user } = res.data.data || res.data;
+      setToken(token);
+      setUser(user);
       window.location.href = '/';
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Invalid email or password');
     }
     setLoading(false);
   };
@@ -49,7 +50,7 @@ export default function LoginPage() {
 
           {/* Google Sign In */}
           <button
-            onClick={() => signIn('google', { callbackUrl: '/' })}
+            onClick={() => alert('Google Sign-In requires OAuth configuration. Use email/password for now.')}
             className="w-full flex items-center justify-center gap-3 bg-white text-dark-900 font-medium py-3 px-4 rounded-xl hover:bg-gray-100 transition-colors mb-4"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">

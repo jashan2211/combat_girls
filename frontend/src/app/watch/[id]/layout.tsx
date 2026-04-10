@@ -1,30 +1,15 @@
-import type { Metadata } from 'next';
-
-type Props = { params: { id: string } };
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const videoId = params.id;
-  const thumbnail = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-
-  return {
-    title: `Watch Fight Video | COMBAT GIRLS`,
-    description: 'Watch women\'s combat sports videos — MMA fights, BJJ matches, boxing, Muay Thai highlights and more on COMBAT GIRLS.',
-    openGraph: {
-      title: 'Watch Fight Video | COMBAT GIRLS',
-      description: 'Women\'s combat sports video on COMBAT GIRLS',
-      images: [thumbnail],
-      type: 'video.other',
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: 'Watch Fight Video | COMBAT GIRLS',
-      images: [thumbnail],
-    },
-    alternates: {
-      canonical: `/watch/${videoId}`,
-    },
-  };
+// Generate static params for all known video IDs
+export function generateStaticParams() {
+  return [
+    'lPQCizd2meU', '63p0NRkbT5U', 'Ljt_wonnsyA', '9vk_y0cXUlk',
+    '7ZyVxOi7CUo', '4vAYlTUUqOY', 'pZm4Wg5qFT0', 'JJL_wGBME48',
+    'EbS-fzLprBU', 'g5wZd8KADKY', 'otsBRV53TvQ',
+    '--TM7wCQFqQ', '7p0WwzlsFwM', 'lwJNZPFTy1Q', 'w_GcUJj5u78',
+    'QdlpCMcO3Xo', 'ejLhewvzQww', 'mOH29aDO4CM', 'KVB4L9gZ3CI',
+  ].map((id) => ({ id }));
 }
+
+export const dynamicParams = true;
 
 export default function WatchLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
