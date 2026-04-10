@@ -63,7 +63,7 @@ function ShortCard({
   }, [isActive]);
 
   const thumbnailUrl = `https://img.youtube.com/vi/${short.youtubeId}/maxresdefault.jpg`;
-  const embedUrl = `https://www.youtube.com/embed/${short.youtubeId}?autoplay=1&loop=1&playlist=${short.youtubeId}&controls=0&modestbranding=1&rel=0&mute=${muted ? 1 : 0}`;
+  const embedUrl = `https://www.youtube-nocookie.com/embed/${short.youtubeId}?autoplay=1&loop=1&playlist=${short.youtubeId}&controls=0&modestbranding=1&rel=0&playsinline=1&mute=${muted ? 1 : 0}`;
 
   return (
     <div
