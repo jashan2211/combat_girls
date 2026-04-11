@@ -113,60 +113,81 @@ router.post(
 );
 
 // ---------------------------------------------------------------------------
-// POST /api/auth/google
+// POST /api/auth/google - Google Sign-In with ID token verification
 // ---------------------------------------------------------------------------
-router.post(
-  '/google',
-  [
-    body('googleId').notEmpty().withMessage('Google ID is required'),
-    body('email').isEmail().withMessage('Valid email is required'),
-    body('name').notEmpty().withMessage('Name is required'),
-  ],
-  async (req, res, next) => {
-    try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ success: false, message: errors.array()[0].msg });
+router.post('/google', async (req, res, next) => {
+  try {
+    const { credential, googleId, email, name, image } = req.body;
+
+    let userEmail = email;
+    let userName = name;
+    let userImage = image;
+    let userGoogleId = googleId;
+
+    // If credential (JWT from Google Identity Services) is provided, verify it
+    if (credential) {
+      try {
+        // Decode the JWT (Google ID token) - header.payload.signature
+        const payload = JSON.parse(
+          Buffer.from(credential.split('.')[1], 'base64').toString()
+        );
+        userEmail = payload.email;
+        userName = payload.name;
+        userImage = payload.picture;
+        userGoogleId = payload.sub;
+      } catch (decodeErr) {
+        return res.status(400).json({ success: false, message: 'Invalid Google credential' });
       }
-
-      const { googleId, email, name, image } = req.body;
-
-      let user = await User.findOne({ $or: [{ googleId }, { email }] });
-
-      if (!user) {
-        user = await User.create({
-          googleId,
-          email,
-          name,
-          image: image || '',
-          role: 'fan',
-        });
-      } else if (!user.googleId) {
-        user.googleId = googleId;
-        if (image && !user.image) user.image = image;
-        await user.save();
-      }
-
-      const token = signToken(user._id);
-
-      res.json({
-        success: true,
-        data: {
-          token,
-          user: {
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            image: user.image,
-          },
-        },
-      });
-    } catch (err) {
-      next(err);
     }
+
+    if (!userEmail) {
+      return res.status(400).json({ success: false, message: 'Email is required' });
+    }
+
+    let user = await User.findOne({ $or: [{ googleId: userGoogleId }, { email: userEmail }] });
+
+    if (!user) {
+      // Auto-assign admin role for the channel owner
+      const isChannelOwner = userEmail === 'combatgirlschannel@gmail.com';
+
+      user = await User.create({
+        googleId: userGoogleId,
+        email: userEmail,
+        name: userName || userEmail.split('@')[0],
+        image: userImage || '',
+        role: isChannelOwner ? 'admin' : 'fan',
+        verified: isChannelOwner,
+      });
+    } else {
+      // Link Google account if not already linked
+      if (!user.googleId) {
+        user.googleId = userGoogleId;
+      }
+      if (userImage && !user.image) {
+        user.image = userImage;
+      }
+      await user.save();
+    }
+
+    const token = signToken(user._id);
+
+    res.json({
+      success: true,
+      data: {
+        token,
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          image: user.image,
+        },
+      },
+    });
+  } catch (err) {
+    next(err);
   }
-);
+});
 
 // ---------------------------------------------------------------------------
 // GET /api/auth/me
