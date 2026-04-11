@@ -190,6 +190,12 @@ export default function LoginPage() {
               Sign up
             </Link>
           </p>
+
+          <div className="text-center mt-4">
+            <Link href="/" className="text-dark-300 hover:text-white text-sm transition-colors">
+              ← Back to Home
+            </Link>
+          </div>
         </div>
       </div>
     </div>

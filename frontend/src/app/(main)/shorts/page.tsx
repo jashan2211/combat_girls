@@ -59,9 +59,11 @@ function ShortCard({
 }) {
   const [playing, setPlaying] = useState(false);
 
-  // Reset playing state when this card is no longer active
+  // Auto-play when this card becomes active, stop when not
   useEffect(() => {
-    if (!isActive) {
+    if (isActive) {
+      setPlaying(true);
+    } else {
       setPlaying(false);
     }
   }, [isActive]);
