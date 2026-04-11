@@ -25,10 +25,7 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
     try {
-      const apiUrl = typeof window !== 'undefined' && window.location.origin.includes('combatgirls.net')
-        ? 'https://combatgirls.net/api'
-        : 'http://localhost:5000/api';
-      const googleRes = await fetch(`${apiUrl}/auth/google`, {
+      const googleRes = await fetch('/api/auth/google', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ credential: response.credential }),

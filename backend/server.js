@@ -46,10 +46,13 @@ io.on('connection', (socket) => {
 // ---------------------------------------------------------------------------
 // Global middleware
 // ---------------------------------------------------------------------------
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable CSP to allow YouTube embeds and Google Sign-In
+  crossOriginEmbedderPolicy: false,
+}));
 app.use(morgan('dev'));
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: true, // Allow all origins (frontend and API are on the same server)
   credentials: true,
 }));
 
