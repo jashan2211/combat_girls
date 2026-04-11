@@ -275,4 +275,91 @@ router.put(
   }
 );
 
+// ---------------------------------------------------------------------------
+// GET /api/auth/google/redirect - Redirect to Google OAuth
+// ---------------------------------------------------------------------------
+router.get('/google/redirect', (req, res) => {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const redirectUri = `${process.env.FRONTEND_URL || 'https://combatgirls.net'}/api/auth/google/callback`;
+  const scope = 'openid email profile';
+  const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent`;
+  res.redirect(url);
+});
+
+// ---------------------------------------------------------------------------
+// GET /api/auth/google/callback - Google OAuth callback
+// ---------------------------------------------------------------------------
+router.get('/google/callback', async (req, res) => {
+  try {
+    const { code } = req.query;
+    if (!code) {
+      return res.redirect('/login?error=' + encodeURIComponent('Google sign-in was cancelled'));
+    }
+
+    const redirectUri = `${process.env.FRONTEND_URL || 'https://combatgirls.net'}/api/auth/google/callback`;
+
+    // Exchange code for tokens
+    const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        code,
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        redirect_uri: redirectUri,
+        grant_type: 'authorization_code',
+      }),
+    });
+    const tokens = await tokenRes.json();
+
+    if (!tokens.access_token) {
+      return res.redirect('/login?error=' + encodeURIComponent('Failed to get Google token'));
+    }
+
+    // Get user info from Google
+    const userRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+      headers: { Authorization: `Bearer ${tokens.access_token}` },
+    });
+    const googleUser = await userRes.json();
+
+    if (!googleUser.email) {
+      return res.redirect('/login?error=' + encodeURIComponent('Failed to get Google profile'));
+    }
+
+    // Find or create user
+    let user = await User.findOne({ $or: [{ googleId: googleUser.id }, { email: googleUser.email }] });
+
+    if (!user) {
+      const isChannelOwner = googleUser.email === 'combatgirlschannel@gmail.com';
+      user = await User.create({
+        googleId: googleUser.id,
+        email: googleUser.email,
+        name: googleUser.name || googleUser.email.split('@')[0],
+        image: googleUser.picture || '',
+        role: isChannelOwner ? 'admin' : 'fan',
+        verified: isChannelOwner,
+      });
+    } else {
+      if (!user.googleId) user.googleId = googleUser.id;
+      if (googleUser.picture && !user.image) user.image = googleUser.picture;
+      await user.save();
+    }
+
+    const token = signToken(user._id);
+    const userData = encodeURIComponent(JSON.stringify({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      image: user.image,
+    }));
+
+    // Redirect back to login page with token
+    res.redirect(`/login?token=${token}&user=${userData}`);
+  } catch (err) {
+    console.error('Google OAuth error:', err);
+    res.redirect('/login?error=' + encodeURIComponent('Google sign-in failed. Please try again.'));
+  }
+});
+
 module.exports = router;
