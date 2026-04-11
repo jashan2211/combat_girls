@@ -4,31 +4,26 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Search, Play, Eye, Calendar, UserPlus, CheckCircle } from 'lucide-react';
 import { cn, formatCount, formatDuration } from '@/lib/utils';
+import { FEATURED_ATHLETES, VIDEOS } from '@/lib/data';
 
 const categories = ['All', 'MMA', 'Boxing', 'Muay Thai', 'BJJ', 'Wrestling', 'Kickboxing'];
 
-const featuredAthletes = [
-  { name: 'Amanda Nunes', slug: 'amanda-nunes', image: '/fighters/amanda-nunes.png', discipline: 'MMA', followers: 2100000, verified: true },
-  { name: 'Valentina Shevchenko', slug: 'valentina-shevchenko', image: '/fighters/valentina-shevchenko.png', discipline: 'MMA', followers: 1500000, verified: true },
-  { name: 'Zhang Weili', slug: 'zhang-weili', image: '/fighters/zhang-weili.png', discipline: 'MMA', followers: 980000, verified: true },
-  { name: 'Rose Namajunas', slug: 'rose-namajunas', image: '/fighters/rose-namajunas.png', discipline: 'MMA', followers: 1200000, verified: true },
-  { name: 'Alexa Grasso', slug: 'alexa-grasso', image: '/fighters/alexa-grasso.png', discipline: 'MMA', followers: 890000, verified: true },
-  { name: 'Holly Holm', slug: 'holly-holm', image: '/fighters/holly-holm.png', discipline: 'Boxing', followers: 1100000, verified: true },
-  { name: 'Kayla Harrison', slug: 'kayla-harrison', image: '/fighters/kayla-harrison.png', discipline: 'Judo', followers: 750000, verified: true },
-  { name: 'Mackenzie Dern', slug: 'mackenzie-dern', image: '/fighters/mackenzie-dern.png', discipline: 'BJJ', followers: 650000, verified: true },
-  { name: 'Ronda Rousey', slug: 'ronda-rousey', image: '/fighters/ronda-rousey.png', discipline: 'Judo', followers: 3200000, verified: true },
-  { name: 'Joanna Jedrzejczyk', slug: 'joanna-jedrzejczyk', image: '/fighters/joanna-jedrzejczyk.png', discipline: 'Muay Thai', followers: 920000, verified: true },
-  { name: 'Jessica Andrade', slug: 'jessica-andrade', image: '/fighters/jessica-andrade.png', discipline: 'MMA', followers: 780000, verified: true },
-];
+const featuredAthletes = FEATURED_ATHLETES.slice(0, 15).map(a => ({
+  name: a.name,
+  slug: a.slug,
+  image: a.image,
+  discipline: a.discipline,
+  followers: a.followers,
+  verified: true,
+}));
 
-const trendingVideos = [
-  { id: 'pZm4Wg5qFT0', title: 'MOUNTED ARM TRIANGLE CHOKE | Female Jiu Jitsu Match', sport: 'BJJ', views: 603, duration: 83 },
-  { id: 'JJL_wGBME48', title: '51 KG GIRL VS 78 KG BOY JIU JITSU', sport: 'BJJ', views: 2400, duration: 300 },
-  { id: 'EbS-fzLprBU', title: 'Tactical BJJ Match! Megan O\'Neal vs. Charlize Balser', sport: 'BJJ', views: 15000, duration: 357 },
-  { id: 'g5wZd8KADKY', title: 'EPIC ENDING! Megan O\'Neal vs. Charlize Balser', sport: 'BJJ', views: 11000, duration: 354 },
-  { id: 'otsBRV53TvQ', title: 'Yurivia Jimenez vs Veronica Vargas | Best Women\'s MMA', sport: 'MMA', views: 89200, duration: 720 },
-  { id: '--TM7wCQFqQ', title: 'Jiu Jitsu In a Dress!', sport: 'BJJ', views: 42300, duration: 45, format: 'shorts' as const },
-];
+const trendingVideos = VIDEOS.slice(0, 8).map(v => ({
+  id: v.id,
+  title: v.title,
+  sport: v.sport,
+  views: v.views,
+  duration: v.duration,
+}));
 
 const upcomingEvents = [
   {

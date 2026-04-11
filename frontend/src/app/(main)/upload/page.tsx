@@ -15,6 +15,7 @@ import {
   ImageOff,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { FEATURED_ATHLETES } from '@/lib/data';
 import Avatar from '@/components/ui/Avatar';
 
 type Platform = 'youtube' | 'instagram' | 'tiktok' | 'facebook' | null;
@@ -29,23 +30,12 @@ interface Athlete {
   image: string;
 }
 
-const mockAthletes: Athlete[] = [
-  { id: '1', name: 'Amanda Nunes', slug: 'amanda-nunes', image: '/fighters/amanda-nunes.png' },
-  { id: '2', name: 'Valentina Shevchenko', slug: 'valentina-shevchenko', image: '/fighters/valentina-shevchenko.png' },
-  { id: '3', name: 'Zhang Weili', slug: 'zhang-weili', image: '/fighters/zhang-weili.png' },
-  { id: '4', name: 'Rose Namajunas', slug: 'rose-namajunas', image: '/fighters/rose-namajunas.png' },
-  { id: '5', name: 'Jessica Andrade', slug: 'jessica-andrade', image: '/fighters/jessica-andrade.png' },
-  { id: '6', name: 'Holly Holm', slug: 'holly-holm', image: '/fighters/holly-holm.png' },
-  { id: '7', name: 'Alexa Grasso', slug: 'alexa-grasso', image: '/fighters/alexa-grasso.png' },
-  { id: '8', name: 'Kayla Harrison', slug: 'kayla-harrison', image: '/fighters/kayla-harrison.png' },
-  { id: '9', name: 'Mackenzie Dern', slug: 'mackenzie-dern', image: '/fighters/mackenzie-dern.png' },
-  { id: '10', name: 'Ronda Rousey', slug: 'ronda-rousey', image: '/fighters/ronda-rousey.png' },
-  { id: '11', name: 'Joanna Jedrzejczyk', slug: 'joanna-jedrzejczyk', image: '/fighters/joanna-jedrzejczyk.png' },
-  { id: '12', name: 'Maycee Barber', slug: 'maycee-barber', image: '' },
-  { id: '13', name: "Megan O'Neal", slug: 'megan-oneal', image: '' },
-  { id: '14', name: 'Charlize Balser', slug: 'charlize-balser', image: '' },
-  { id: '15', name: 'Claressa Shields', slug: 'claressa-shields', image: '' },
-];
+const mockAthletes: Athlete[] = FEATURED_ATHLETES.slice(0, 20).map((a, i) => ({
+  id: String(i + 1),
+  name: a.name,
+  slug: a.slug,
+  image: a.image,
+}));
 
 const categories = [
   { value: 'fight', label: 'Fight' },

@@ -13,6 +13,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { cn, formatCount } from '@/lib/utils';
+import { SHORTS } from '@/lib/data';
 import Avatar from '@/components/ui/Avatar';
 
 interface ShortData {
@@ -29,16 +30,19 @@ interface ShortData {
   saved: boolean;
 }
 
-const mockShorts: ShortData[] = [
-  { id: '--TM7wCQFqQ', youtubeId: '--TM7wCQFqQ', title: 'Jiu Jitsu In a Dress!', athlete: { name: 'Combat Girls', verified: true }, description: 'Jiu Jitsu In a Dress! #grappling #bjj #combatgirls', likes: 42300, comments: 1840, shares: 3200, saves: 890, liked: false, saved: false },
-  { id: '7p0WwzlsFwM', youtubeId: '7p0WwzlsFwM', title: '2 vs 2 Womens MMA', athlete: { name: 'Combat Girls', verified: true }, description: '2 vs 2 Women\'s MMA #martialarts #mma #viralshorts', likes: 31500, comments: 920, shares: 2100, saves: 1540, liked: false, saved: false },
-  { id: 'lwJNZPFTy1Q', youtubeId: 'lwJNZPFTy1Q', title: 'Reverse Triangle Choke', athlete: { name: 'Combat Girls', verified: true }, description: 'Reverse Triangle Choke Armbar #bjj #jiujitsu', likes: 67800, comments: 3210, shares: 5400, saves: 2100, liked: false, saved: false },
-  { id: 'w_GcUJj5u78', youtubeId: 'w_GcUJj5u78', title: 'Girl Submits A Man', athlete: { name: 'Combat Girls', verified: true }, description: 'JIU JITSU GIRL SUBMITS A MAN #bjj #combatsport #jiujitsu', likes: 28900, comments: 1450, shares: 1890, saves: 3200, liked: false, saved: false },
-  { id: 'QdlpCMcO3Xo', youtubeId: 'QdlpCMcO3Xo', title: 'Slick Armbar', athlete: { name: 'Combat Girls', verified: true }, description: 'SLICK ARMBAR #bjj #jiujitsu #grappling', likes: 54200, comments: 2780, shares: 4100, saves: 1670, liked: false, saved: false },
-  { id: 'ejLhewvzQww', youtubeId: 'ejLhewvzQww', title: 'Jiu Jitsu Gang Wars', athlete: { name: 'Combat Girls', verified: true }, description: 'JIU JITSU GANG WARS #bjj #jiujitsu #martialarts #mma', likes: 38700, comments: 2100, shares: 3800, saves: 1290, liked: false, saved: false },
-  { id: 'mOH29aDO4CM', youtubeId: 'mOH29aDO4CM', title: 'Leg Cradle', athlete: { name: 'Combat Girls', verified: true }, description: 'Leg Cradle! Makynlee Cova Wrestling #CombatGirls', likes: 22100, comments: 980, shares: 1500, saves: 870, liked: false, saved: false },
-  { id: 'KVB4L9gZ3CI', youtubeId: 'KVB4L9gZ3CI', title: 'Leg Cradle Finish', athlete: { name: 'Combat Girls', verified: true }, description: 'LEG CRADLE! Kaylee Thompson #wrestling #legcradle', likes: 19400, comments: 760, shares: 1200, saves: 650, liked: false, saved: false },
-];
+const mockShorts: ShortData[] = SHORTS.map(s => ({
+  id: s.id,
+  youtubeId: s.id,
+  title: s.title,
+  athlete: { name: 'Combat Girls', verified: true },
+  description: s.description,
+  likes: s.views,
+  comments: Math.floor(s.views * 0.04),
+  shares: Math.floor(s.views * 0.08),
+  saves: Math.floor(s.views * 0.03),
+  liked: false,
+  saved: false,
+}));
 
 function ShortCard({
   short,
