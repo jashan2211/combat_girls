@@ -67,7 +67,8 @@ function ShortCard({
   }, [isActive]);
 
   const thumbnailUrl = `https://img.youtube.com/vi/${short.youtubeId}/maxresdefault.jpg`;
-  const embedUrl = `https://www.youtube-nocookie.com/embed/${short.youtubeId}?autoplay=1&loop=1&playlist=${short.youtubeId}&controls=0&modestbranding=1&rel=0&playsinline=1&mute=${muted ? 1 : 0}`;
+  // Use regular youtube.com/embed for shorts (youtube-nocookie can cause Error 153 on some shorts)
+  const embedUrl = `https://www.youtube.com/embed/${short.youtubeId}?autoplay=1&loop=1&playlist=${short.youtubeId}&controls=1&modestbranding=1&rel=0&playsinline=1&mute=${muted ? 1 : 0}`;
 
   return (
     <div

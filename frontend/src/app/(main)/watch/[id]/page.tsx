@@ -133,7 +133,7 @@ export default function WatchPage() {
         {/* YouTube Video Player */}
         <div className="relative aspect-video bg-dark-900 lg:rounded-2xl overflow-hidden">
           <iframe
-            src={`https://www.youtube-nocookie.com/embed/${youtubeId}?rel=0&modestbranding=1&playsinline=1`}
+            src={`https://www.youtube.com/embed/${youtubeId}?rel=0&modestbranding=1&playsinline=1`}
             className="absolute inset-0 w-full h-full"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             referrerPolicy="strict-origin-when-cross-origin"
@@ -297,7 +297,7 @@ export default function WatchPage() {
 
           {/* Athlete Info */}
           <div className="flex items-center gap-3 mt-4 py-3 border-y border-dark-600">
-            <Link href="/profile/combat-girls">
+            <Link href="/explore">
               <Avatar
                 src={null}
                 name="Combat Girls"
@@ -307,7 +307,7 @@ export default function WatchPage() {
             </Link>
             <div className="flex-1 min-w-0">
               <Link
-                href="/profile/combat-girls"
+                href="/explore"
                 className="text-sm font-semibold text-white hover:underline"
               >
                 Combat Girls
