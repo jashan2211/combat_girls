@@ -22,10 +22,14 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
 
   const handleGoogleResponse = useCallback(async (response: any) => {
+    if (!response.credential) return;
     setLoading(true);
     setError('');
     try {
-      const googleRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://combatgirls.net/api'}/auth/google`, {
+      const apiUrl = typeof window !== 'undefined' && window.location.origin.includes('combatgirls.net')
+        ? 'https://combatgirls.net/api'
+        : 'http://localhost:5000/api';
+      const googleRes = await fetch(`${apiUrl}/auth/google`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ credential: response.credential }),
@@ -45,30 +49,38 @@ export default function RegisterPage() {
     setLoading(false);
   }, []);
 
+  const [googleLoaded, setGoogleLoaded] = useState(false);
+
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     const script = document.createElement('script');
     script.src = 'https://accounts.google.com/gsi/client';
     script.async = true;
-    script.defer = true;
-    script.onload = () => {
-      (window as any).google?.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: handleGoogleResponse,
-      });
-      const buttonDiv = document.getElementById('google-signup-btn');
-      if (buttonDiv) {
-        (window as any).google?.accounts.id.renderButton(buttonDiv, {
-          theme: 'filled_black',
-          size: 'large',
-          width: '100%',
-          text: 'signup_with',
-          shape: 'pill',
-        });
-      }
-    };
+    script.onload = () => setGoogleLoaded(true);
     document.head.appendChild(script);
     return () => { script.remove(); };
-  }, [handleGoogleResponse]);
+  }, []);
+
+  useEffect(() => {
+    if (!googleLoaded || typeof window === 'undefined') return;
+    const g = (window as any).google;
+    if (!g) return;
+    g.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: handleGoogleResponse,
+      ux_mode: 'popup',
+    });
+    const btn = document.getElementById('google-signup-btn');
+    if (btn) {
+      g.accounts.id.renderButton(btn, {
+        theme: 'filled_black',
+        size: 'large',
+        text: 'signup_with',
+        shape: 'pill',
+        width: 350,
+      });
+    }
+  }, [googleLoaded, handleGoogleResponse]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
