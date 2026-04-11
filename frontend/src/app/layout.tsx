@@ -78,7 +78,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark" suppressHydrationWarning>
       <head>
         <WebsiteJsonLd />
         <OrganizationJsonLd />
@@ -87,7 +87,7 @@ export default function RootLayout({
         {/* Google Search Console verification - replace with your actual code */}
         <meta name="google-site-verification" content="YOUR_VERIFICATION_CODE" />
       </head>
-      <body className="font-sans min-h-screen bg-dark-900">
+      <body className="font-sans min-h-screen bg-dark-900" suppressHydrationWarning>
         <Providers>
           {children}
           <Toaster
