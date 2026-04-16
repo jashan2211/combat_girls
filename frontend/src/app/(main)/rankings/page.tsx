@@ -115,9 +115,15 @@ function HeadToHead({
 }: {
   onVote: (slug: string) => void;
 }) {
-  const [pair, setPair] = useState<[AthleteItem, AthleteItem]>(() => getRandomPair(FEATURED_ATHLETES));
+  // Use deterministic initial pair to prevent SSR/client mismatch
+  const [pair, setPair] = useState<[AthleteItem, AthleteItem]>(() => [FEATURED_ATHLETES[0], FEATURED_ATHLETES[1]]);
   const [voted, setVoted] = useState<string | null>(null);
   const [toast, setToast] = useState<{ show: boolean; name: string }>({ show: false, name: '' });
+
+  // Randomize after mount
+  useEffect(() => {
+    setPair(getRandomPair(FEATURED_ATHLETES));
+  }, []);
 
   const nextMatchup = useCallback(() => {
     setVoted(null);

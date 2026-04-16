@@ -7,6 +7,7 @@ export interface User {
   role: 'fan' | 'athlete' | 'admin';
   bio?: string;
   verified: boolean;
+  slug?: string;
   // Athlete-specific
   fightRecord?: {
     wins: number;

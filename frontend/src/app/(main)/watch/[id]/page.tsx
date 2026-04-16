@@ -69,7 +69,7 @@ export default function WatchPage() {
   const description = videoItem?.description ?? '';
   const views = videoItem?.views ?? 0;
   const sport = videoItem?.sport ?? 'MMA';
-  const createdAt = videoItem?.createdAt ?? new Date().toISOString();
+  const createdAt = videoItem?.createdAt ?? '2026-01-01T00:00:00.000Z';
   const duration = videoItem?.duration ?? 0;
   const fighters = videoItem?.fighters ?? [];
 

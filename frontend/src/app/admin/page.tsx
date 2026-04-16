@@ -511,7 +511,7 @@ export default function AdminDashboard() {
                       <div className="w-16 h-10 bg-dark-700 rounded-lg flex-shrink-0" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{title}</p>
-                        <p className="text-xs text-dark-200">{(Math.random() * 100).toFixed(1)}K views</p>
+                        <p className="text-xs text-dark-200">{((i + 1) * 17.3).toFixed(1)}K views</p>
                       </div>
                     </div>
                   ))}

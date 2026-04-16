@@ -61,7 +61,7 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { user } = useAuthStore();
+  const { user, isHydrated } = useAuthStore();
   const { unreadCount } = useNotificationStore();
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
 
@@ -98,8 +98,11 @@ export default function MainLayout({
               )}
             </button>
 
-            {user ? (
-              <Link href="/profile/me" className="ml-1">
+            {/* Render placeholder until hydrated to prevent SSR/client mismatch */}
+            {!isHydrated ? (
+              <div className="ml-1 w-8 h-8 rounded-full bg-dark-700 animate-pulse" />
+            ) : user ? (
+              <Link href={`/profile/${user.slug || 'me'}`} className="ml-1">
                 <Avatar
                   src={user?.image}
                   name={user?.name || 'User'}

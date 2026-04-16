@@ -2,22 +2,47 @@
 
 import { useEffect } from 'react';
 import { useAuthStore } from '@/lib/store';
-import { authAPI } from '@/lib/api';
 
 function AuthSync({ children }: { children: React.ReactNode }) {
-  const { token, setUser, setLoading } = useAuthStore();
+  const { hydrate, setLoading, token, user, setUser, setToken } = useAuthStore();
 
+  // Hydrate from localStorage after mount (prevents SSR/client mismatch)
   useEffect(() => {
-    if (token) {
-      authAPI
-        .getMe()
-        .then((res) => setUser(res.data?.user || res.data))
-        .catch(() => setUser(null))
-        .finally(() => setLoading(false));
-    } else {
+    hydrate();
+  }, [hydrate]);
+
+  // Fetch current user if we have a token but no user data
+  useEffect(() => {
+    if (!token) {
       setLoading(false);
+      return;
     }
-  }, [token, setUser, setLoading]);
+    if (user) {
+      setLoading(false);
+      return;
+    }
+    // Fetch user from /api/auth/me
+    fetch('/api/auth/me', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && data.data?.user) {
+          setUser(data.data.user);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('user', JSON.stringify(data.data.user));
+          }
+        } else {
+          // Invalid token — clear it
+          setToken(null);
+          setUser(null);
+        }
+      })
+      .catch(() => {
+        // Network error — keep token but don't set user
+      })
+      .finally(() => setLoading(false));
+  }, [token, user, setUser, setToken, setLoading]);
 
   return <>{children}</>;
 }

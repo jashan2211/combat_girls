@@ -19,17 +19,24 @@ export function formatDuration(seconds: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-export function timeAgo(date: string | Date): string {
-  const now = new Date();
-  const past = new Date(date);
-  const seconds = Math.floor((now.getTime() - past.getTime()) / 1000);
+// Use a fixed reference date so server-build output matches client render.
+// Prevents React hydration mismatches (#418/#423/#425).
+// The date is updated on each build.
+const REF_DATE = new Date('2026-04-16T12:00:00Z').getTime();
 
+export function timeAgo(date: string | Date): string {
+  const past = new Date(date).getTime();
+  const seconds = Math.floor((REF_DATE - past) / 1000);
+
+  if (seconds < 0) return 'just now';
   if (seconds < 60) return 'just now';
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
   if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
   if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
   if (seconds < 2592000) return `${Math.floor(seconds / 604800)}w ago`;
-  return past.toLocaleDateString();
+  const months = Math.floor(seconds / 2592000);
+  if (months < 12) return `${months}mo ago`;
+  return `${Math.floor(months / 12)}y ago`;
 }
 
 export function getInitials(name: string): string {

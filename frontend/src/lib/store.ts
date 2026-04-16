@@ -5,25 +5,52 @@ interface AuthState {
   user: User | null;
   token: string | null;
   isLoading: boolean;
+  isHydrated: boolean;
   setUser: (user: User | null) => void;
   setToken: (token: string | null) => void;
   setLoading: (loading: boolean) => void;
+  hydrate: () => void;
   logout: () => void;
 }
 
+// IMPORTANT: initial state must be identical on server and client to avoid
+// React hydration mismatches (#418, #423, #425). Hydrate from localStorage
+// only AFTER mount via hydrate().
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
-  token: typeof window !== 'undefined' ? localStorage.getItem('token') : null,
+  token: null,
   isLoading: true,
-  setUser: (user) => set({ user }),
+  isHydrated: false,
+  setUser: (user) => {
+    if (typeof window !== 'undefined') {
+      if (user) localStorage.setItem('user', JSON.stringify(user));
+      else localStorage.removeItem('user');
+    }
+    set({ user });
+  },
   setToken: (token) => {
-    if (token) localStorage.setItem('token', token);
-    else localStorage.removeItem('token');
+    if (typeof window !== 'undefined') {
+      if (token) localStorage.setItem('token', token);
+      else localStorage.removeItem('token');
+    }
     set({ token });
   },
   setLoading: (isLoading) => set({ isLoading }),
+  hydrate: () => {
+    if (typeof window === 'undefined') return;
+    const stored = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+    set({
+      token: stored,
+      user: storedUser ? JSON.parse(storedUser) : null,
+      isHydrated: true,
+    });
+  },
   logout: () => {
-    localStorage.removeItem('token');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+    }
     set({ user: null, token: null });
   },
 }));
