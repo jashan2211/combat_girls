@@ -20,7 +20,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { cn, formatCount, formatDuration, timeAgo } from '@/lib/utils';
-import { FEATURED_ATHLETES, VIDEOS } from '@/lib/data';
+import { FEATURED_ATHLETES, VIDEOS, SHORTS, COMBAT_GIRLS_CHANNEL } from '@/lib/data';
 import Avatar from '@/components/ui/Avatar';
 import Modal from '@/components/ui/Modal';
 
@@ -78,14 +78,19 @@ export default function ProfilePage() {
     );
   }
 
+  // Special case: Combat Girls channel owns ALL videos
+  const isChannelOwner = slug === 'combat-girls';
+
   // Build athlete display object from the central data
   const athlete = {
     name: athleteData.name,
     nickname: athleteData.nickname ?? null,
     image: athleteData.image,
-    verified: athleteData.verified,
-    profileStatus: 'unclaimed' as ProfileStatus,
-    bio: `${athleteData.name}${athleteData.nickname ? ` "${athleteData.nickname}"` : ''} — professional ${athleteData.discipline} fighter.`,
+    verified: athleteData.verified || isChannelOwner,
+    profileStatus: (isChannelOwner ? 'verified' : 'unclaimed') as ProfileStatus,
+    bio: isChannelOwner
+      ? "Welcome to COMBAT GIRLS — the official home of women's combat sports. Watch the best MMA, BJJ, Boxing, Muay Thai, and Wrestling content from female athletes around the world."
+      : `${athleteData.name}${athleteData.nickname ? ` "${athleteData.nickname}"` : ''} — professional ${athleteData.discipline} fighter.`,
     fightRecord: athleteData.record
       ? {
           wins: athleteData.record.wins,
@@ -99,20 +104,26 @@ export default function ProfilePage() {
     gym: athleteData.gym ?? null,
     location: athleteData.location ?? null,
     discipline: [athleteData.discipline],
-    socialLinks: {} as Record<string, string>,
+    socialLinks: isChannelOwner
+      ? {
+          youtube: 'https://www.youtube.com/@combat_girls',
+          instagram: 'https://instagram.com/combat_girls',
+        }
+      : ({} as Record<string, string>),
     stats: {
       followers: athleteData.followers,
       following: 0,
       totalViews: 0,
       totalVideos: 0,
     },
-    athleteSubscription: { active: false, tier: 'free' },
+    athleteSubscription: { active: isChannelOwner, tier: isChannelOwner ? 'premium' : 'free' },
   };
 
-  // Filter videos that feature this athlete
-  const athleteVideos = VIDEOS.filter((v) =>
-    v.fighters?.some((f) => f.slug === slug)
-  );
+  // Combat Girls channel shows ALL videos (long-form + shorts)
+  // Other athletes: only videos where they're tagged as a fighter
+  const athleteVideos = isChannelOwner
+    ? [...VIDEOS, ...SHORTS]
+    : VIDEOS.filter((v) => v.fighters?.some((f) => f.slug === slug));
 
   athlete.stats.totalVideos = athleteVideos.length;
   athlete.stats.totalViews = athleteVideos.reduce((sum, v) => sum + v.views, 0);

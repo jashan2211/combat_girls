@@ -326,22 +326,30 @@ router.get('/google/callback', async (req, res) => {
       return res.redirect('/login?error=' + encodeURIComponent('Failed to get Google profile'));
     }
 
+    const isChannelOwner = googleUser.email === 'combatgirlschannel@gmail.com';
+
     // Find or create user
     let user = await User.findOne({ $or: [{ googleId: googleUser.id }, { email: googleUser.email }] });
 
     if (!user) {
-      const isChannelOwner = googleUser.email === 'combatgirlschannel@gmail.com';
       user = await User.create({
         googleId: googleUser.id,
         email: googleUser.email,
-        name: googleUser.name || googleUser.email.split('@')[0],
+        name: isChannelOwner ? 'Combat Girls' : (googleUser.name || googleUser.email.split('@')[0]),
         image: googleUser.picture || '',
         role: isChannelOwner ? 'admin' : 'fan',
         verified: isChannelOwner,
+        slug: isChannelOwner ? 'combat-girls' : undefined,
       });
     } else {
       if (!user.googleId) user.googleId = googleUser.id;
       if (googleUser.picture && !user.image) user.image = googleUser.picture;
+      // If channel owner, ensure they have admin + verified status
+      if (isChannelOwner) {
+        user.role = 'admin';
+        user.verified = true;
+        user.slug = 'combat-girls';
+      }
       await user.save();
     }
 
@@ -354,8 +362,9 @@ router.get('/google/callback', async (req, res) => {
       image: user.image,
     }));
 
-    // Redirect back to login page with token
-    res.redirect(`/login?token=${token}&user=${userData}`);
+    // Redirect back to login page with token (channel owner goes to their profile)
+    const redirectPath = isChannelOwner ? '/profile/combat-girls' : '/';
+    res.redirect(`/login?token=${token}&user=${userData}&next=${encodeURIComponent(redirectPath)}`);
   } catch (err) {
     console.error('Google OAuth error:', err);
     res.redirect('/login?error=' + encodeURIComponent('Google sign-in failed. Please try again.'));

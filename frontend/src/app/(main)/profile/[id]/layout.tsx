@@ -1,6 +1,7 @@
-// Generate static params for all known athlete slugs
+// Generate static params for all known athlete slugs (Combat Girls channel listed first)
 export function generateStaticParams() {
   return [
+    'combat-girls', // Official channel - shows all videos
     'amanda-nunes', 'valentina-shevchenko', 'zhang-weili', 'rose-namajunas',
     'alexa-grasso', 'holly-holm', 'kayla-harrison', 'mackenzie-dern',
     'ronda-rousey', 'joanna-jedrzejczyk', 'jessica-andrade',

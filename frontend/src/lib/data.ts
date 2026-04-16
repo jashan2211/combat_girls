@@ -82,8 +82,24 @@ export interface AthleteItem {
   location?: string;
 }
 
-// Real UFC female fighters (50 most active)
+// Combat Girls channel — official YouTube channel profile
+// All videos in VIDEOS + SHORTS belong to this channel
+export const COMBAT_GIRLS_CHANNEL: AthleteItem = {
+  name: 'Combat Girls',
+  slug: 'combat-girls',
+  image: 'https://ui-avatars.com/api/?name=Combat+Girls&background=dc2626&color=fff&size=256&font-size=0.4&bold=true',
+  discipline: 'MMA',
+  followers: 47700,
+  verified: true,
+  nickname: 'Official Channel',
+  weightClass: '',
+  gym: '',
+  location: 'Worldwide',
+};
+
+// Real UFC female fighters (50 most active) - Combat Girls listed first as primary channel
 export const FEATURED_ATHLETES: AthleteItem[] = [
+  COMBAT_GIRLS_CHANNEL,
   {
     "name": "Jessica Andrade",
     "slug": "jessica-andrade",

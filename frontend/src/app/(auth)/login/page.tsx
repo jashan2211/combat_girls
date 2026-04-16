@@ -22,9 +22,10 @@ export default function LoginPage() {
     if (token && userData) {
       try {
         const user = JSON.parse(decodeURIComponent(userData));
+        const next = params.get('next');
         setToken(token);
         setUser(user);
-        window.location.href = '/';
+        window.location.href = next ? decodeURIComponent(next) : '/';
       } catch {
         setError('Google sign-in failed. Invalid response.');
       }

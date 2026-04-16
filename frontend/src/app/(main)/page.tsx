@@ -21,7 +21,7 @@ const mockVideos = VIDEOS.map((v) => ({
   title: v.title,
   thumbnail: v.thumbnail,
   duration: v.duration,
-  athlete: { name: 'Combat Girls', image: null, verified: true },
+  athlete: { name: 'Combat Girls', image: 'https://ui-avatars.com/api/?name=CG&background=dc2626&color=fff&bold=true', verified: true },
   fighters: v.fighters && v.fighters.length >= 2
     ? { fighter1: { name: v.fighters[0].name, slug: v.fighters[0].slug, image: v.fighters[0].image }, fighter2: { name: v.fighters[1].name, slug: v.fighters[1].slug, image: v.fighters[1].image } }
     : null,

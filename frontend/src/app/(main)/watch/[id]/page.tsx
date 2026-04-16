@@ -297,9 +297,9 @@ export default function WatchPage() {
 
           {/* Athlete Info */}
           <div className="flex items-center gap-3 mt-4 py-3 border-y border-dark-600">
-            <Link href="/explore">
+            <Link href="/profile/combat-girls">
               <Avatar
-                src={null}
+                src="https://ui-avatars.com/api/?name=CG&background=dc2626&color=fff&bold=true"
                 name="Combat Girls"
                 size="md"
                 verified={true}
@@ -307,13 +307,13 @@ export default function WatchPage() {
             </Link>
             <div className="flex-1 min-w-0">
               <Link
-                href="/explore"
+                href="/profile/combat-girls"
                 className="text-sm font-semibold text-white hover:underline"
               >
                 Combat Girls
               </Link>
               <p className="text-xs text-dark-300">
-                {formatCount(47600)} followers
+                {formatCount(47700)} followers · Official Channel
               </p>
             </div>
             <button
